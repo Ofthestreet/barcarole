@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap">
+  <style>
+    :root {
+      --bg: #0E1526;
+      --surface: #141C31;
+      --surface-hi: #1B2440;
+      --surface-sel: #123A4A;
+      --on: #E6EBF5;
+      --on-var: #97A3BF;
+      --primary: #00DCDF;
+      --on-primary: #00363A;
+      --coral: #FF8F6C;
+      --outline: #29334F;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Roboto, system-ui, -apple-system, sans-serif; }
+    .screen {
+      width: 390px; height: 844px; background: var(--bg); color: var(--on);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .appbar {
+      height: 64px; display: flex; align-items: center; gap: 4px;
+      padding: 0 4px 0 16px; flex: 0 0 auto;
+    }
+    .appbar h1 { font-size: 22px; font-weight: 400; margin: 0; flex: 1; }
+    .iconbtn {
+      width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+      border-radius: 24px; color: var(--on-var); flex: 0 0 auto;
+    }
+    .tabs { display: flex; border-bottom: 1px solid var(--outline); flex: 0 0 auto; }
+    .tab {
+      flex: 1; height: 48px; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 500; color: var(--on-var);
+    }
+    .tab.on { color: var(--primary); box-shadow: inset 0 -3px 0 var(--primary); }
+    .list { flex: 1; overflow: hidden; }
+    .row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; height: 64px; }
+    .art { border-radius: 8px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+    .meta { flex: 1; min-width: 0; }
+    .t1 { font-size: 16px; line-height: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t2 { font-size: 12px; line-height: 16px; color: var(--on-var); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dur { font-size: 12px; color: var(--on-var); font-variant-numeric: tabular-nums; }
+    .rail { width: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 8px 0; }
+    .rail span { font-size: 10px; line-height: 12px; color: rgba(151,163,191,.35); }
+    .rail span.on { color: var(--primary); }
+    .mini { background: var(--surface-hi); flex: 0 0 auto; }
+    .mini-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+    .bar { height: 4px; background: var(--outline); }
+    .bar i { display: block; height: 4px; background: var(--primary); }
+    .navspace { height: 24px; background: var(--surface-hi); }
+    .section { font-size: 14px; font-weight: 500; color: var(--primary); padding: 16px 16px 4px; }
+    .btn {
+      height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center;
+      gap: 8px; font-size: 14px; font-weight: 500; flex: 1;
+    }
+    .btn.fill { background: var(--primary); color: var(--on-primary); }
+    .btn.out { border: 1px solid var(--outline); color: var(--on); }
+    a { color: var(--primary); } a:hover { color: var(--coral); }
+
+  </style>
+</helmet>
+<div class="screen">
+<div class="appbar" style="padding:0 4px">
+  <div class="iconbtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M12 19l-7-7 7-7"></path></svg></div>
+  <h1>Queue</h1>
+  <div class="iconbtn" style="color:var(--primary)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h4l10 12h4M17 4l3 2-3 2"></path><path d="M3 18h4l3-3.5M17 20l3-2-3-2"></path></svg></div>
+  <div style="height:48px;display:flex;align-items:center;padding:0 12px;font-size:14px;font-weight:500;color:var(--primary)">Clear</div>
+</div>
+<div class="list"><div class="row" style="height:64px;background:var(--surface-sel);"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#0286AE;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Digital Love</div><div class="t2">Daft Punk</div></div><div style="color:var(--primary)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10v4h3l4 3V7l-4 3z"></path><path d="M16 9a4 4 0 0 1 0 6"></path></svg></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#00A6A8;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Harder, Better, Faster, Stronger</div><div class="t2">Daft Punk</div></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#3A5BB8;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Crescendolls</div><div class="t2">Daft Punk</div></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#C4633F;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Nightvision</div><div class="t2">Daft Punk</div></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#1E7F8C;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Superheroes</div><div class="t2">Daft Punk</div></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#7A4B8F;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">High Life</div><div class="t2">Daft Punk</div></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#0286AE;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Something About Us</div><div class="t2">Daft Punk</div></div></div><div class="row" style="height:64px;"><div style="color:var(--on-var)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"></path></svg></div><div class="art" style="width:40px;height:40px;background:#00A6A8;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div><div class="meta"><div class="t1" style="font-size:15px">Voyager</div><div class="t2">Daft Punk</div></div></div></div>
+<div class="mini">
+  <div class="mini-row"><div class="art" style="width:44px;height:44px;background:#00A6A8;border-radius:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="17" r="3"></circle><path d="M11 17V5l9-2v12"></path><circle cx="17" cy="15" r="3"></circle></svg></div>
+    <div class="meta"><div class="t1" style="font-size:14px">Digital love</div>
+      <div class="t2">Daft Punk</div></div>
+    <div class="iconbtn" style="width:44px;height:44px;color:var(--on)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16M16 4v16"></path></svg></div>
+    <div class="iconbtn" style="width:44px;height:44px;color:var(--on)"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l10 8-10 8z"></path><path d="M19 4v16"></path></svg></div>
+  </div>
+  <div class="bar"><i style="width:42%"></i></div>
+  <div class="navspace"></div>
+</div>
+</div>
+</x-dc>
+</body>
+</html>
