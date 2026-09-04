@@ -19,6 +19,7 @@ data class Settings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = false,
     val minTrackSeconds: Int = 30,
+    val showAlbums: Boolean = false,
     val sortOrders: Map<LibraryTab, SortOrder> = emptyMap(),
 ) {
     fun sortFor(tab: LibraryTab): SortOrder = sortOrders[tab] ?: SortOrder()
@@ -34,6 +35,7 @@ class SettingsStore @Inject constructor(private val context: Context) {
             themeMode = prefs[KeyTheme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
             dynamicColor = prefs[KeyDynamicColor] ?: false,
             minTrackSeconds = prefs[KeyMinTrackSeconds] ?: 30,
+            showAlbums = prefs[KeyShowAlbums] ?: false,
             sortOrders = LibraryTab.entries.associateWith { tab ->
                 val key = prefs[sortKeyFor(tab)]?.let { runCatching { SongSort.valueOf(it) }.getOrNull() } ?: SongSort.TITLE
                 SortOrder(key = key, ascending = prefs[sortAscendingFor(tab)] ?: true)
@@ -47,6 +49,8 @@ class SettingsStore @Inject constructor(private val context: Context) {
 
     suspend fun setMinTrackSeconds(seconds: Int) = context.dataStore.edit { it[KeyMinTrackSeconds] = seconds }
 
+    suspend fun setShowAlbums(enabled: Boolean) = context.dataStore.edit { it[KeyShowAlbums] = enabled }
+
     suspend fun setSortOrder(tab: LibraryTab, order: SortOrder) = context.dataStore.edit {
         it[sortKeyFor(tab)] = order.key.name
         it[sortAscendingFor(tab)] = order.ascending
@@ -56,6 +60,7 @@ class SettingsStore @Inject constructor(private val context: Context) {
         val KeyTheme = stringPreferencesKey("theme_mode")
         val KeyDynamicColor = booleanPreferencesKey("dynamic_color")
         val KeyMinTrackSeconds = intPreferencesKey("min_track_seconds")
+        val KeyShowAlbums = booleanPreferencesKey("show_albums")
         fun sortKeyFor(tab: LibraryTab) = stringPreferencesKey("sort_key_${tab.name}")
         fun sortAscendingFor(tab: LibraryTab) = booleanPreferencesKey("sort_asc_${tab.name}")
     }

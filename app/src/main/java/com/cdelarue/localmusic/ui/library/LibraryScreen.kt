@@ -74,9 +74,13 @@ fun LibraryScreen(
     onOpenPlaylist: (PlaylistId) -> Unit,
 ) {
     var sortMenuOpen by remember { mutableStateOf(false) }
-    val sortable = selectedTab == LibraryTab.SONGS ||
-        selectedTab == LibraryTab.ALBUMS ||
-        selectedTab == LibraryTab.ARTISTS
+    // Albums are optional, so the tab strip is a filtered list and its index is a position in
+    // that list, never the enum's ordinal.
+    val tabs = LibraryTab.entries.filter { it != LibraryTab.ALBUMS || state.settings.showAlbums }
+    val effectiveTab = if (selectedTab in tabs) selectedTab else LibraryTab.SONGS
+    val sortable = effectiveTab == LibraryTab.SONGS ||
+        effectiveTab == LibraryTab.ALBUMS ||
+        effectiveTab == LibraryTab.ARTISTS
 
     Scaffold(
         topBar = {
@@ -93,7 +97,7 @@ fun LibraryScreen(
                             }
                             DropdownMenu(expanded = sortMenuOpen, onDismissRequest = { sortMenuOpen = false }) {
                                 SongSort.entries.forEach { key ->
-                                    val current = state.settings.sortFor(selectedTab)
+                                    val current = state.settings.sortFor(effectiveTab)
                                     val marker = if (current.key == key) {
                                         if (current.ascending) "  ↑" else "  ↓"
                                     } else {
@@ -102,7 +106,7 @@ fun LibraryScreen(
                                     DropdownMenuItem(
                                         text = { Text(key.label() + marker) },
                                         onClick = {
-                                            onSort(selectedTab, key)
+                                            onSort(effectiveTab, key)
                                             sortMenuOpen = false
                                         },
                                     )
@@ -124,10 +128,10 @@ fun LibraryScreen(
             if (state.isScanning) {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
-            TabRow(selectedTabIndex = selectedTab.ordinal) {
-                LibraryTab.entries.forEach { tab ->
+            TabRow(selectedTabIndex = tabs.indexOf(effectiveTab).coerceAtLeast(0)) {
+                tabs.forEach { tab ->
                     Tab(
-                        selected = tab == selectedTab,
+                        selected = tab == effectiveTab,
                         onClick = { onSelectTab(tab) },
                         text = { Text(tab.label()) },
                     )
@@ -142,7 +146,7 @@ fun LibraryScreen(
                 return@Column
             }
 
-            when (selectedTab) {
+            when (effectiveTab) {
                 LibraryTab.SONGS -> SongsTab(state.songsSorted(LibraryTab.SONGS), onSongClick, onSongLongClick)
                 LibraryTab.ALBUMS -> AlbumsTab(state.library.albums, onAlbumClick)
                 LibraryTab.ARTISTS -> ArtistsTab(state.library.artists, onArtistClick)

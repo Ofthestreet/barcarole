@@ -13,6 +13,8 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionError
 import com.cdelarue.localmusic.data.LibraryRepository
+import com.cdelarue.localmusic.data.SettingsStore
+import com.cdelarue.localmusic.data.stats.PlaylistId
 import com.cdelarue.localmusic.data.stats.PlaylistRepository
 import com.cdelarue.localmusic.data.albumArtUri
 import com.google.common.collect.ImmutableList
@@ -44,6 +46,8 @@ class PlaybackService : MediaLibraryService() {
 
     @Inject lateinit var playlistRepository: PlaylistRepository
 
+    @Inject lateinit var settingsStore: SettingsStore
+
     @Inject lateinit var appScope: CoroutineScope
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -70,6 +74,9 @@ class PlaybackService : MediaLibraryService() {
         player = exoPlayer
         session = MediaLibrarySession.Builder(this, exoPlayer, LibraryCallback()).build()
         startListenTracking()
+        serviceScope.launch {
+            settingsStore.settings.collect { showAlbums = it.showAlbums }
+        }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = session
@@ -91,6 +98,15 @@ class PlaybackService : MediaLibraryService() {
      * each time round.
      */
     private var countedCurrent = false
+
+    /** Mirrored from settings so the browse callbacks, which are synchronous, can read it. */
+    private var showAlbums = false
+
+    private fun browseContext() = BrowseContext(
+        library = libraryRepository.library.value,
+        favourites = playlistRepository.songsOf(PlaylistId.FAVOURITES),
+        showAlbums = showAlbums,
+    )
 
     private val trackChanges = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -153,7 +169,7 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-            val children = BrowseTree.childrenOf(libraryRepository.library.value, parentId)
+            val children = BrowseTree.childrenOf(browseContext(), parentId)
             val items = children.map { it.toMediaItem() }
             return Futures.immediateFuture(LibraryResult.ofItemList(ImmutableList.copyOf(items), params))
         }
@@ -169,7 +185,7 @@ class PlaybackService : MediaLibraryService() {
             return if (song != null) {
                 Futures.immediateFuture(LibraryResult.ofItem(song.toMediaItem(), null))
             } else {
-                val node = BrowseTree.rootChildren().firstOrNull { it.id == mediaId }
+                val node = BrowseTree.rootChildren(browseContext()).firstOrNull { it.id == mediaId }
                 if (node != null) {
                     Futures.immediateFuture(LibraryResult.ofItem(node.toMediaItem(), null))
                 } else {
@@ -184,7 +200,7 @@ class PlaybackService : MediaLibraryService() {
             query: String,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<Void>> {
-            val count = BrowseTree.search(libraryRepository.library.value, query).size
+            val count = BrowseTree.search(browseContext(), query).size
             session.notifySearchResultChanged(browser, query, count, params)
             return Futures.immediateFuture(LibraryResult.ofVoid())
         }
@@ -197,7 +213,7 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-            val items = BrowseTree.search(libraryRepository.library.value, query).map { it.toMediaItem() }
+            val items = BrowseTree.search(browseContext(), query).map { it.toMediaItem() }
             return Futures.immediateFuture(LibraryResult.ofItemList(ImmutableList.copyOf(items), params))
         }
 
@@ -212,15 +228,16 @@ class PlaybackService : MediaLibraryService() {
             startIndex: Int,
             startPositionMs: Long,
         ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
-            val library = libraryRepository.library.value
+            val context = browseContext()
+            val library = context.library
             val single = mediaItems.singleOrNull()
             if (single != null && single.localConfiguration == null) {
                 // "Play Discovery" from the Assistant arrives as an item carrying only a query.
                 val query = single.requestMetadata.searchQuery
                 val selection = if (!query.isNullOrBlank()) {
-                    BrowseTree.queueForSearch(library, query)
+                    BrowseTree.queueForSearch(context, query)
                 } else {
-                    BrowseTree.queueFor(library, single.mediaId)
+                    BrowseTree.queueFor(context, single.mediaId)
                 }
                 if (selection != null) {
                     return Futures.immediateFuture(

@@ -2,6 +2,7 @@ package com.cdelarue.localmusic
 
 import com.cdelarue.localmusic.data.LibraryIndex
 import com.cdelarue.localmusic.data.Song
+import com.cdelarue.localmusic.playback.BrowseContext
 import com.cdelarue.localmusic.playback.BrowseIds
 import com.cdelarue.localmusic.playback.BrowseStyle
 import com.cdelarue.localmusic.playback.BrowseTree
@@ -23,7 +24,7 @@ class BrowseTreeTest {
         path: String = "/storage/emulated/0/Music",
     ) = Song(id, title, artist, album, albumId, artistId, 200_000, track, 2001, 1_000, "$path/$title.mp3")
 
-    private val library = LibraryIndex.build(
+    private val libraryData = LibraryIndex.build(
         listOf(
             song(1, "Alpha", track = 1),
             song(2, "Beta", track = 2),
@@ -31,18 +32,54 @@ class BrowseTreeTest {
         ),
     )
 
+    private val library = BrowseContext(library = libraryData, showAlbums = true)
+
     @Test
-    fun `the root offers the same four tabs as the phone`() {
+    fun `the root leads with favourites and lists the browse modes`() {
         val ids = BrowseTree.childrenOf(library, BrowseIds.ROOT).map { it.id }
         assertEquals(
-            listOf(BrowseIds.TAB_SONGS, BrowseIds.TAB_ALBUMS, BrowseIds.TAB_ARTISTS, BrowseIds.TAB_FOLDERS),
+            listOf(
+                BrowseIds.TAB_FAVOURITES,
+                BrowseIds.TAB_SONGS,
+                BrowseIds.TAB_ALBUMS,
+                BrowseIds.TAB_ARTISTS,
+                BrowseIds.TAB_FOLDERS,
+            ),
             ids,
         )
     }
 
     @Test
+    fun `turning albums off removes them from the car as well`() {
+        val withoutAlbums = library.copy(showAlbums = false)
+        val ids = BrowseTree.childrenOf(withoutAlbums, BrowseIds.ROOT).map { it.id }
+        assertEquals(
+            listOf(BrowseIds.TAB_FAVOURITES, BrowseIds.TAB_SONGS, BrowseIds.TAB_ARTISTS, BrowseIds.TAB_FOLDERS),
+            ids,
+        )
+        assertTrue(BrowseTree.search(withoutAlbums, "album b").none { it.id == BrowseIds.album(2) })
+    }
+
+    @Test
+    fun `favourites browse and play in the order they were favourited`() {
+        val favourites = listOf(libraryData.songs.first { it.title == "Gamma" })
+        val context = library.copy(favourites = favourites)
+        assertEquals(listOf("Gamma"), BrowseTree.childrenOf(context, BrowseIds.TAB_FAVOURITES).map { it.title })
+
+        val node = BrowseTree.childrenOf(context, BrowseIds.TAB_FAVOURITES).single()
+        assertEquals(listOf("Gamma"), BrowseTree.queueFor(context, node.id)!!.songs.map { it.title })
+    }
+
+    @Test
+    fun `asking for favourites by voice plays the list, not a title that matches`() {
+        val favourites = listOf(libraryData.songs.first { it.title == "Beta" })
+        val context = library.copy(favourites = favourites)
+        assertEquals(listOf("Beta"), BrowseTree.queueForSearch(context, "my favourites")!!.songs.map { it.title })
+    }
+
+    @Test
     fun `every root asks for a list, since there is no artwork to fill a grid`() {
-        BrowseTree.rootChildren().forEach { node ->
+        BrowseTree.rootChildren(library).forEach { node ->
             assertEquals(BrowseStyle.LIST, node.childStyle)
         }
     }

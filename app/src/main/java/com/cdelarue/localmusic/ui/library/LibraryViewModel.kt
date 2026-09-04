@@ -112,6 +112,10 @@ class LibraryViewModel @Inject constructor(
         viewModelScope.launch { settingsStore.setDynamicColor(enabled) }
     }
 
+    fun setShowAlbums(enabled: Boolean) {
+        viewModelScope.launch { settingsStore.setShowAlbums(enabled) }
+    }
+
     fun setMinTrackSeconds(seconds: Int) {
         viewModelScope.launch { settingsStore.setMinTrackSeconds(seconds) }
     }

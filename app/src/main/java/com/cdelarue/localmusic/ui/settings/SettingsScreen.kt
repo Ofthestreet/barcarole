@@ -48,6 +48,7 @@ fun SettingsScreen(
     onThemeMode: (ThemeMode) -> Unit,
     onDynamicColor: (Boolean) -> Unit,
     onMinTrackSeconds: (Int) -> Unit,
+    onShowAlbums: (Boolean) -> Unit,
     onRescan: () -> Unit,
     onBrowseFolders: () -> Unit,
 ) {
@@ -94,6 +95,13 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionTitle("Library")
+
+            SettingRow(
+                title = "Show albums",
+                subtitle = "Adds the albums tab, and album results in search",
+            ) {
+                Switch(checked = settings.showAlbums, onCheckedChange = onShowAlbums)
+            }
 
             Row(
                 modifier = Modifier

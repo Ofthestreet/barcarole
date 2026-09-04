@@ -39,6 +39,7 @@ import com.cdelarue.localmusic.util.pluralCount
 fun SearchScreen(
     query: String,
     results: SearchResults,
+    showAlbums: Boolean,
     onQueryChange: (String) -> Unit,
     onBack: () -> Unit,
     onSongClick: (List<Song>, Song) -> Unit,
@@ -95,8 +96,8 @@ fun SearchScreen(
                     onLongClick = { onSongLongClick(song) },
                 )
             }
-            section("Albums", results.albums.size)
-            items(results.albums, key = { "album-${it.id}" }) { album ->
+            section("Albums", if (showAlbums) results.albums.size else 0)
+            items(if (showAlbums) results.albums else emptyList(), key = { "album-${it.id}" }) { album ->
                 TextRow(
                     title = album.title,
                     subtitle = "${album.artist} · ${pluralCount(album.songCount, "track")}",

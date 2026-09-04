@@ -204,6 +204,7 @@ private fun LocalMusicApp(
                     SearchScreen(
                         query = searchQuery,
                         results = searchResults,
+                        showAlbums = state.settings.showAlbums,
                         onQueryChange = viewModel::onSearchQueryChange,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
@@ -224,6 +225,7 @@ private fun LocalMusicApp(
                         onThemeMode = viewModel::setThemeMode,
                         onDynamicColor = viewModel::setDynamicColor,
                         onMinTrackSeconds = viewModel::setMinTrackSeconds,
+                        onShowAlbums = viewModel::setShowAlbums,
                         onRescan = viewModel::rescan,
                         onBrowseFolders = { navController.navigate(Routes.FOLDERS) },
                     )
