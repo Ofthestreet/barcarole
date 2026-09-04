@@ -36,6 +36,8 @@ class PlayerViewModel @Inject constructor(
 
     fun clearQueue() = connection.clearQueue()
 
+    fun removeSongFromQueue(songId: Long) = connection.removeSong(songId)
+
     fun togglePlayPause() = connection.togglePlayPause()
 
     fun next() = connection.next()

@@ -191,6 +191,16 @@ class PlayerConnection @Inject constructor(
         }
     }
 
+    /** Drops every copy of a song from the queue, used once its file is gone. */
+    fun removeSong(songId: Long) {
+        val player = controller ?: return
+        for (index in player.mediaItemCount - 1 downTo 0) {
+            if (BrowseIds.songIdOf(player.getMediaItemAt(index).mediaId) == songId) {
+                player.removeMediaItem(index)
+            }
+        }
+    }
+
     /** Keeps the current track and drops everything else. */
     fun clearQueue() {
         val player = controller ?: return

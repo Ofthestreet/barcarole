@@ -4,10 +4,12 @@ import android.Manifest
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cdelarue.localmusic.data.LibraryIndex
 import com.cdelarue.localmusic.data.LibraryTab
+import com.cdelarue.localmusic.data.DeleteOutcome
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.data.stats.PlaylistId
 import com.cdelarue.localmusic.playback.BrowseIds
@@ -45,6 +48,7 @@ import com.cdelarue.localmusic.ui.permission.PermissionScreen
 import com.cdelarue.localmusic.ui.player.MiniPlayer
 import com.cdelarue.localmusic.ui.player.NowPlayingScreen
 import com.cdelarue.localmusic.ui.player.PlayerViewModel
+import com.cdelarue.localmusic.ui.components.DeleteSongDialog
 import com.cdelarue.localmusic.ui.components.SongActionsSheet
 import com.cdelarue.localmusic.ui.search.SearchScreen
 import com.cdelarue.localmusic.ui.settings.SettingsScreen
@@ -133,6 +137,51 @@ private fun LocalMusicApp(
         val playlistSongs = remember(selectedPlaylist, playlists) { viewModel.songsOf(selectedPlaylist) }
         val playlistCounts = remember(selectedPlaylist, playlists) { viewModel.playCountsOf(selectedPlaylist) }
         val playingSongId = playerState.current?.mediaId?.let { BrowseIds.songIdOf(it) }
+        val playingSong = playingSongId?.let { id -> state.library.songs.firstOrNull { it.id == id } }
+        var pendingDeletion by remember { mutableStateOf<Song?>(null) }
+        var awaitingConsentFor by remember { mutableStateOf<Long?>(null) }
+
+        // Android 11+ asks for its own confirmation and reports back here.
+        val deleteConsentLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.StartIntentSenderForResult(),
+        ) { result ->
+            val songId = awaitingConsentFor
+            awaitingConsentFor = null
+            if (result.resultCode == android.app.Activity.RESULT_OK && songId != null) {
+                playerViewModel.removeSongFromQueue(songId)
+                viewModel.onSongDeleted(songId)
+            }
+        }
+
+        fun startDeletion(song: Song) {
+            when (val outcome = viewModel.deleteSong(song)) {
+                is DeleteOutcome.Deleted -> {
+                    playerViewModel.removeSongFromQueue(song.id)
+                    viewModel.onSongDeleted(song.id)
+                }
+
+                is DeleteOutcome.NeedsConsent -> {
+                    awaitingConsentFor = song.id
+                    deleteConsentLauncher.launch(
+                        IntentSenderRequest.Builder(outcome.intentSender).build(),
+                    )
+                }
+
+                is DeleteOutcome.Failed ->
+                    Toast.makeText(context, outcome.reason, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        pendingDeletion?.let { song ->
+            DeleteSongDialog(
+                song = song,
+                onDismiss = { pendingDeletion = null },
+                onConfirm = {
+                    pendingDeletion = null
+                    startDeletion(song)
+                },
+            )
+        }
         val playingIsFavourite = playingSongId != null && playingSongId in favouriteIds
         val onSongClick: (List<Song>, Song) -> Unit = playerViewModel::play
         var actionSheetSong by remember { mutableStateOf<Song?>(null) }
@@ -267,6 +316,7 @@ private fun LocalMusicApp(
                     isFavourite = playingIsFavourite,
                     onExpand = { navController.navigate(Routes.PLAYER) },
                     onToggleFavourite = { playingSongId?.let(viewModel::toggleFavourite) },
+                    onDelete = { playingSong?.let { pendingDeletion = it } },
                     onPlayPause = playerViewModel::togglePlayPause,
                     onNext = playerViewModel::next,
                     modifier = Modifier.navigationBarsPadding(),

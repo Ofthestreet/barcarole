@@ -91,6 +91,12 @@ class PlaylistRepository @Inject constructor(
         }
     }
 
+    /** After a file is deleted there is nothing left to remember about it. */
+    suspend fun forget(songId: Long) {
+        favourites.remove(songId)
+        history.forget(songId)
+    }
+
     suspend fun recordPlay(songId: Long) {
         history.recordPlay(PlayEvent(songId = songId, playedAt = clock()))
     }

@@ -11,6 +11,8 @@ import com.cdelarue.localmusic.data.Settings
 import com.cdelarue.localmusic.data.SettingsStore
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.data.SongSort
+import com.cdelarue.localmusic.data.DeleteOutcome
+import com.cdelarue.localmusic.data.SongDeleter
 import com.cdelarue.localmusic.data.SortOrder
 import com.cdelarue.localmusic.data.stats.PlaylistId
 import com.cdelarue.localmusic.data.stats.PlaylistRepository
@@ -45,6 +47,7 @@ class LibraryViewModel @Inject constructor(
     private val repository: LibraryRepository,
     private val settingsStore: SettingsStore,
     private val playlistRepository: PlaylistRepository,
+    private val songDeleter: SongDeleter,
 ) : ViewModel() {
 
     val playlists: StateFlow<List<PlaylistSummary>> = combine(
@@ -62,6 +65,16 @@ class LibraryViewModel @Inject constructor(
     fun playCountsOf(id: PlaylistId): Map<Long, Int> = playlistRepository.playCounts(id)
 
     fun toggleFavourite(songId: Long) = playlistRepository.toggleFavourite(songId)
+
+    fun deleteSong(song: Song): DeleteOutcome = songDeleter.delete(song)
+
+    /** Called once the file is actually gone, whether we deleted it or the system did. */
+    fun onSongDeleted(songId: Long) {
+        viewModelScope.launch {
+            playlistRepository.forget(songId)
+            repository.refresh()
+        }
+    }
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
