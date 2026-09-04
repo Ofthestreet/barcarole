@@ -12,7 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.cdelarue.localmusic.data.ThemeMode
 
-private val Seed = Color(0xFF1D9E75)
+/** The turquoise of the note in the app icon. */
+private val Seed = Color(0xFF00DCDF)
 
 private val LightScheme = lightColorScheme(primary = Seed)
 private val DarkScheme = darkColorScheme(primary = Seed)
