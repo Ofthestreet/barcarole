@@ -93,6 +93,25 @@ class BrowseTreeTest {
     }
 
     @Test
+    fun `a voice query prefers an album over a single matching track`() {
+        val selection = BrowseTree.queueForSearch(library, "album b")!!
+        assertEquals(listOf("Gamma"), selection.songs.map { it.title })
+        assertEquals(0, selection.startIndex)
+    }
+
+    @Test
+    fun `a voice query falling through to a title still plays something`() {
+        val selection = BrowseTree.queueForSearch(library, "alpha")!!
+        assertEquals("Alpha", selection.songs[selection.startIndex].title)
+    }
+
+    @Test
+    fun `an empty voice query plays the whole library, an unmatched one plays nothing`() {
+        assertEquals(3, BrowseTree.queueForSearch(library, "  ")!!.songs.size)
+        assertNull(BrowseTree.queueForSearch(library, "nothing matches this"))
+    }
+
+    @Test
     fun `a song id gives up its song id whichever shape it has`() {
         // The phone queues plain ids; the browse tree carries the parent alongside.
         assertEquals(42L, BrowseIds.songIdOf("42"))

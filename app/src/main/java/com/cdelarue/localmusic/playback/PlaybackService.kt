@@ -164,7 +164,13 @@ class PlaybackService : MediaLibraryService() {
             val library = libraryRepository.library.value
             val single = mediaItems.singleOrNull()
             if (single != null && single.localConfiguration == null) {
-                val selection = BrowseTree.queueFor(library, single.mediaId)
+                // "Play Discovery" from the Assistant arrives as an item carrying only a query.
+                val query = single.requestMetadata.searchQuery
+                val selection = if (!query.isNullOrBlank()) {
+                    BrowseTree.queueForSearch(library, query)
+                } else {
+                    BrowseTree.queueFor(library, single.mediaId)
+                }
                 if (selection != null) {
                     return Futures.immediateFuture(
                         MediaSession.MediaItemsWithStartPosition(

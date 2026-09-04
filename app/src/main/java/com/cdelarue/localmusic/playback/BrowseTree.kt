@@ -155,6 +155,27 @@ object BrowseTree {
         return if (songs.isEmpty()) null else QueueSelection(songs, 0)
     }
 
+    /**
+     * What "play Discovery" should start. An album or an artist is a better answer than a single
+     * track, so those win over a title match; an empty query means "play everything".
+     */
+    fun queueForSearch(library: Library, query: String): QueueSelection? {
+        if (query.isBlank()) {
+            return library.songs.takeIf { it.isNotEmpty() }?.let { QueueSelection(it, 0) }
+        }
+        val results = LibraryIndex.search(library, query)
+        results.albums.firstOrNull()?.let { album ->
+            return queueFor(library, BrowseIds.album(album.id))
+        }
+        results.artists.firstOrNull()?.let { artist ->
+            return queueFor(library, BrowseIds.artist(artist.id))
+        }
+        results.songs.firstOrNull()?.let { song ->
+            return QueueSelection(results.songs, results.songs.indexOf(song))
+        }
+        return null
+    }
+
     private fun Song.toNode(parentId: String) = BrowseNode(
         id = BrowseIds.song(id, parentId),
         title = title,
