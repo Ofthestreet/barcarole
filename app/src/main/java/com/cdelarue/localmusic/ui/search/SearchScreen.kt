@@ -43,6 +43,7 @@ fun SearchScreen(
     onQueryChange: (String) -> Unit,
     onBack: () -> Unit,
     onSongClick: (List<Song>, Song) -> Unit,
+    onSongLongClick: (Song) -> Unit,
     onAlbumClick: (Album) -> Unit,
     onArtistClick: (Artist) -> Unit,
     onFolderClick: (Folder) -> Unit,
@@ -89,7 +90,11 @@ fun SearchScreen(
         LazyColumn(modifier = Modifier.padding(insets).fillMaxSize()) {
             section("Songs", results.songs.size)
             items(results.songs, key = { "song-${it.id}" }) { song ->
-                SongRow(song = song, onClick = { onSongClick(results.songs, song) })
+                SongRow(
+                    song = song,
+                    onClick = { onSongClick(results.songs, song) },
+                    onLongClick = { onSongLongClick(song) },
+                )
             }
             section("Albums", results.albums.size)
             items(results.albums, key = { "album-${it.id}" }) { album ->

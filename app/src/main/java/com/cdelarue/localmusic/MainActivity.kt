@@ -40,6 +40,8 @@ import com.cdelarue.localmusic.ui.permission.PermissionScreen
 import com.cdelarue.localmusic.ui.player.MiniPlayer
 import com.cdelarue.localmusic.ui.player.NowPlayingScreen
 import com.cdelarue.localmusic.ui.player.PlayerViewModel
+import com.cdelarue.localmusic.ui.queue.QueueScreen
+import com.cdelarue.localmusic.ui.components.SongActionsSheet
 import com.cdelarue.localmusic.ui.search.SearchScreen
 import com.cdelarue.localmusic.ui.settings.SettingsScreen
 import com.cdelarue.localmusic.ui.theme.LocalMusicTheme
@@ -61,6 +63,7 @@ private object Routes {
     const val SEARCH = "search"
     const val SETTINGS = "settings"
     const val PLAYER = "player"
+    const val QUEUE = "queue"
     const val ALBUM = "album/{albumId}"
     const val ARTIST = "artist/{artistId}"
     const val FOLDER = "folder?path={folderPath}"
@@ -119,6 +122,23 @@ private fun LocalMusicApp(
         val navController = rememberNavController()
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         val onSongClick: (List<Song>, Song) -> Unit = playerViewModel::play
+        var actionSheetSong by remember { mutableStateOf<Song?>(null) }
+        val onSongLongClick: (Song) -> Unit = { actionSheetSong = it }
+
+        actionSheetSong?.let { song ->
+            SongActionsSheet(
+                song = song,
+                onDismiss = { actionSheetSong = null },
+                onPlayNext = {
+                    playerViewModel.playNext(listOf(song))
+                    actionSheetSong = null
+                },
+                onAddToQueue = {
+                    playerViewModel.addToQueue(listOf(song))
+                    actionSheetSong = null
+                },
+            )
+        }
 
         Column(modifier = Modifier.fillMaxSize()) {
             NavHost(
@@ -132,6 +152,7 @@ private fun LocalMusicApp(
                         onSort = viewModel::setSort,
                         onRescan = viewModel::rescan,
                         onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
                         onAlbumClick = { navController.navigate(Routes.album(it.id)) },
                         onArtistClick = { navController.navigate(Routes.artist(it.id)) },
                         onFolderClick = { navController.navigate(Routes.folder(it.path)) },
@@ -147,6 +168,7 @@ private fun LocalMusicApp(
                         onQueryChange = viewModel::onSearchQueryChange,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
                         onAlbumClick = { navController.navigate(Routes.album(it.id)) },
                         onArtistClick = { navController.navigate(Routes.artist(it.id)) },
                         onFolderClick = { navController.navigate(Routes.folder(it.path)) },
@@ -166,10 +188,23 @@ private fun LocalMusicApp(
                     )
                 }
 
+                composable(Routes.QUEUE) {
+                    QueueScreen(
+                        state = playerState,
+                        onBack = { navController.popBackStackSafely() },
+                        onPlayIndex = playerViewModel::seekToQueueIndex,
+                        onMove = playerViewModel::moveQueueItem,
+                        onRemove = playerViewModel::removeFromQueue,
+                        onClear = playerViewModel::clearQueue,
+                        onToggleShuffle = playerViewModel::toggleShuffle,
+                    )
+                }
+
                 composable(Routes.PLAYER) {
                     NowPlayingScreen(
                         state = playerState,
                         onBack = { navController.popBackStackSafely() },
+                        onOpenQueue = { navController.navigate(Routes.QUEUE) },
                         onPlayPause = playerViewModel::togglePlayPause,
                         onNext = playerViewModel::next,
                         onPrevious = playerViewModel::previous,
@@ -190,6 +225,7 @@ private fun LocalMusicApp(
                         artworkAlbumId = albumId,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
                         onPlayAll = playerViewModel::playAll,
                         onShuffleAll = playerViewModel::shuffleAll,
                     )
@@ -206,6 +242,7 @@ private fun LocalMusicApp(
                         artworkAlbumId = songs.firstOrNull()?.albumId,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
                         onPlayAll = playerViewModel::playAll,
                         onShuffleAll = playerViewModel::shuffleAll,
                     )
@@ -226,6 +263,7 @@ private fun LocalMusicApp(
                         artworkAlbumId = songs.firstOrNull()?.albumId,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
                         onPlayAll = playerViewModel::playAll,
                         onShuffleAll = playerViewModel::shuffleAll,
                     )

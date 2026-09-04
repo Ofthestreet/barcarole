@@ -4,17 +4,22 @@ import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.cdelarue.localmusic.data.LibraryRepository
 import com.cdelarue.localmusic.data.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -50,12 +55,17 @@ data class PlayerState(
 class PlayerConnection @Inject constructor(
     private val context: Context,
     private val scope: CoroutineScope,
+    private val queueStore: QueueStore,
+    private val libraryRepository: LibraryRepository,
 ) {
 
     private var controller: MediaController? = null
 
     private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
+
+    /** Latest queue worth persisting; written out at a low rate rather than on every event. */
+    private val pendingSave = MutableStateFlow<QueueSnapshot?>(null)
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) = publish()
@@ -74,10 +84,14 @@ class PlayerConnection @Inject constructor(
                 controller?.addListener(listener)
                 publish()
                 startPositionTicker()
+                startQueuePersistence()
+                restoreQueueIfIdle()
             },
             ContextCompat.getMainExecutor(context),
         )
     }
+
+    // ---- playback commands -------------------------------------------------
 
     fun playAll(songs: List<Song>, startIndex: Int = 0) {
         val player = controller ?: return
@@ -95,6 +109,27 @@ class PlayerConnection @Inject constructor(
         player.shuffleModeEnabled = true
         player.prepare()
         player.play()
+    }
+
+    /** Drops the tracks in right after whatever is playing. */
+    fun playNext(songs: List<Song>) {
+        val player = controller ?: return
+        if (songs.isEmpty()) return
+        if (player.mediaItemCount == 0) {
+            playAll(songs)
+            return
+        }
+        player.addMediaItems(player.currentMediaItemIndex + 1, songs.toMediaItems())
+    }
+
+    fun addToQueue(songs: List<Song>) {
+        val player = controller ?: return
+        if (songs.isEmpty()) return
+        if (player.mediaItemCount == 0) {
+            playAll(songs)
+            return
+        }
+        player.addMediaItems(songs.toMediaItems())
     }
 
     fun togglePlayPause() {
@@ -141,6 +176,41 @@ class PlayerConnection @Inject constructor(
         }
     }
 
+    // ---- queue editing -----------------------------------------------------
+
+    fun moveQueueItem(from: Int, to: Int) {
+        val player = controller ?: return
+        val count = player.mediaItemCount
+        if (from in 0 until count && to in 0 until count && from != to) {
+            player.moveMediaItem(from, to)
+        }
+    }
+
+    fun removeFromQueue(index: Int) {
+        val player = controller ?: return
+        if (index in 0 until player.mediaItemCount) {
+            player.removeMediaItem(index)
+        }
+    }
+
+    /** Keeps the current track and drops everything else. */
+    fun clearQueue() {
+        val player = controller ?: return
+        val keep = player.currentMediaItemIndex
+        val count = player.mediaItemCount
+        if (count > keep + 1) player.removeMediaItems(keep + 1, count)
+        if (keep > 0) player.removeMediaItems(0, keep)
+    }
+
+    fun stopAndClear() {
+        val player = controller ?: return
+        player.stop()
+        player.clearMediaItems()
+        scope.launch { queueStore.clear() }
+    }
+
+    // ---- state plumbing ----------------------------------------------------
+
     private fun startPositionTicker() {
         scope.launch(Dispatchers.Main) {
             while (true) {
@@ -150,21 +220,66 @@ class PlayerConnection @Inject constructor(
                         positionMs = player.currentPosition.coerceAtLeast(0),
                         durationMs = player.duration.coerceAtLeast(0),
                     )
+                    pendingSave.value = snapshotOf(player)
                 }
                 delay(POSITION_TICK_MS)
             }
         }
     }
 
+    @OptIn(FlowPreview::class)
+    private fun startQueuePersistence() {
+        scope.launch {
+            pendingSave
+                .filterNotNull()
+                .sample(SAVE_INTERVAL_MS)
+                .collect { queueStore.save(it.songIds, it.index, it.positionMs) }
+        }
+    }
+
+    private fun restoreQueueIfIdle() {
+        scope.launch(Dispatchers.Main) {
+            val player = controller ?: return@launch
+            if (player.mediaItemCount > 0) return@launch
+            val snapshot = queueStore.snapshot.first() ?: return@launch
+
+            // The library has to be scanned before ids mean anything.
+            libraryRepository.hasScanned.first { it }
+            val byId = libraryRepository.library.value.songs.associateBy { it.id }
+            val restored = QueueRestore.resolve(snapshot, byId) ?: return@launch
+
+            // Restored paused: coming back to the app should not start blaring music.
+            player.setMediaItems(
+                restored.songs.toMediaItems(),
+                restored.index,
+                restored.positionMs,
+            )
+            player.prepare()
+            publish()
+        }
+    }
+
+    private fun snapshotOf(player: Player): QueueSnapshot? {
+        val count = player.mediaItemCount
+        if (count == 0) return null
+        val ids = (0 until count).mapNotNull { player.getMediaItemAt(it).mediaId.toLongOrNull() }
+        if (ids.isEmpty()) return null
+        return QueueSnapshot(
+            songIds = ids,
+            index = player.currentMediaItemIndex,
+            positionMs = player.currentPosition.coerceAtLeast(0),
+        )
+    }
+
     private fun publish() {
         val player = controller ?: return
         val queue = (0 until player.mediaItemCount).map { index ->
-            val metadata = player.getMediaItemAt(index).mediaMetadata
+            val item = player.getMediaItemAt(index)
             QueueEntry(
-                mediaId = player.getMediaItemAt(index).mediaId,
-                title = metadata.title?.toString().orEmpty(),
-                artist = metadata.artist?.toString().orEmpty(),
-                artworkUri = metadata.artworkUri,
+                mediaId = item.mediaId,
+                title = item.mediaMetadata.title?.toString().orEmpty(),
+                artist = item.mediaMetadata.artist?.toString().orEmpty(),
+                artworkUri = item.mediaMetadata.artworkUri,
             )
         }
         val index = player.currentMediaItemIndex
@@ -180,10 +295,12 @@ class PlayerConnection @Inject constructor(
             queueIndex = index,
             queue = queue,
         )
+        pendingSave.value = snapshotOf(player)
     }
 
     private companion object {
         const val RESTART_THRESHOLD_MS = 3_000L
         const val POSITION_TICK_MS = 500L
+        const val SAVE_INTERVAL_MS = 3_000L
     }
 }

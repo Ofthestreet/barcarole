@@ -1,5 +1,6 @@
 package com.cdelarue.localmusic.ui.player
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
@@ -50,6 +52,7 @@ import com.cdelarue.localmusic.util.formatDuration
 fun NowPlayingScreen(
     state: PlayerState,
     onBack: () -> Unit,
+    onOpenQueue: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -73,6 +76,11 @@ fun NowPlayingScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onOpenQueue) {
+                        Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue")
                     }
                 },
             )
@@ -196,7 +204,9 @@ fun NowPlayingScreen(
                 text = "Track ${state.queueIndex + 1} of ${state.queue.size}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onOpenQueue),
                 textAlign = TextAlign.Center,
             )
         }

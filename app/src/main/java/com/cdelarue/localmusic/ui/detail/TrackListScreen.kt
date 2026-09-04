@@ -44,6 +44,7 @@ fun TrackListScreen(
     artworkAlbumId: Long?,
     onBack: () -> Unit,
     onSongClick: (List<Song>, Song) -> Unit,
+    onSongLongClick: (Song) -> Unit,
     onPlayAll: (List<Song>) -> Unit,
     onShuffleAll: (List<Song>) -> Unit,
 ) {
@@ -101,7 +102,11 @@ fun TrackListScreen(
                 }
             }
             items(songs, key = { it.id }) { song ->
-                SongRow(song = song, onClick = { onSongClick(songs, song) })
+                SongRow(
+                    song = song,
+                    onClick = { onSongClick(songs, song) },
+                    onLongClick = { onSongLongClick(song) },
+                )
             }
         }
     }

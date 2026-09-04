@@ -26,6 +26,16 @@ class PlayerViewModel @Inject constructor(
 
     fun shuffleAll(songs: List<Song>) = connection.shuffleAll(songs)
 
+    fun playNext(songs: List<Song>) = connection.playNext(songs)
+
+    fun addToQueue(songs: List<Song>) = connection.addToQueue(songs)
+
+    fun moveQueueItem(from: Int, to: Int) = connection.moveQueueItem(from, to)
+
+    fun removeFromQueue(index: Int) = connection.removeFromQueue(index)
+
+    fun clearQueue() = connection.clearQueue()
+
     fun togglePlayPause() = connection.togglePlayPause()
 
     fun next() = connection.next()
