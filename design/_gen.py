@@ -357,9 +357,7 @@ body = f"""<div class="screen">
 
 # 8. Demande de permission
 body = f"""<div class="screen" style="justify-content:center;align-items:center;padding:0 32px;text-align:center">
-  <div style="width:96px;height:96px;border-radius:28px;background:#182464;display:flex;align-items:center;justify-content:center;margin-bottom:32px">
-    {icon(I["note"], 48, "var(--primary)", "none", "1.6")}
-  </div>
+  <img src="app-icon.png" alt="" style="width:112px;height:112px;border-radius:28px;margin-bottom:32px">
   <div style="font-size:24px;line-height:32px">Access to your audio files</div>
   <div style="font-size:16px;line-height:24px;color:var(--on-var);margin-top:16px;text-wrap:pretty">
     This app only reads the music already stored on this phone. It has no network access and sends nothing anywhere.
