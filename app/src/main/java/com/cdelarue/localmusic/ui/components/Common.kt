@@ -55,6 +55,25 @@ fun Artwork(
     )
 }
 
+/** Same treatment as [Artwork], for callers that already hold the artwork URI (playback state). */
+@Composable
+fun ArtworkUri(
+    uri: android.net.Uri?,
+    modifier: Modifier = Modifier,
+    corner: Int = 8,
+    fallbackIcon: ImageVector = Icons.Rounded.MusicNote,
+) {
+    val shape = RoundedCornerShape(corner.dp)
+    SubcomposeAsyncImage(
+        model = uri,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = modifier.clip(shape),
+        loading = { PlaceholderArt(fallbackIcon) },
+        error = { PlaceholderArt(fallbackIcon) },
+    )
+}
+
 @Composable
 private fun PlaceholderArt(icon: ImageVector) {
     Box(

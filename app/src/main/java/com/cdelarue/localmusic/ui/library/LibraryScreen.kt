@@ -57,7 +57,7 @@ fun LibraryScreen(
     state: LibraryUiState,
     onSort: (LibraryTab, SongSort) -> Unit,
     onRescan: () -> Unit,
-    onSongClick: (Song) -> Unit,
+    onSongClick: (List<Song>, Song) -> Unit,
     onAlbumClick: (Album) -> Unit,
     onArtistClick: (Artist) -> Unit,
     onFolderClick: (Folder) -> Unit,
@@ -140,7 +140,7 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun SongsTab(songs: List<Song>, onSongClick: (Song) -> Unit) {
+private fun SongsTab(songs: List<Song>, onSongClick: (List<Song>, Song) -> Unit) {
     val listState = rememberLazyListState()
     Row(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -149,7 +149,7 @@ private fun SongsTab(songs: List<Song>, onSongClick: (Song) -> Unit) {
             contentPadding = PaddingValues(bottom = 16.dp),
         ) {
             items(songs, key = { it.id }) { song ->
-                SongRow(song = song, onClick = { onSongClick(song) })
+                SongRow(song = song, onClick = { onSongClick(songs, song) })
             }
         }
         AlphabetRail(
