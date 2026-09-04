@@ -11,6 +11,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionError
 import com.cdelarue.localmusic.data.LibraryRepository
 import com.cdelarue.localmusic.data.albumArtUri
 import com.google.common.collect.ImmutableList
@@ -122,7 +123,7 @@ class PlaybackService : MediaLibraryService() {
                 if (node != null) {
                     Futures.immediateFuture(LibraryResult.ofItem(node.toMediaItem(), null))
                 } else {
-                    Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+                    Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
                 }
             }
         }
