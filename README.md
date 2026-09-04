@@ -26,3 +26,16 @@ link the phone can open directly.
 Kotlin, Jetpack Compose, Material 3, minSdk 26, targetSdk 36, JDK 17.
 Playback will use androidx.media3 (ExoPlayer in a `MediaLibraryService`), which also serves
 the Android Auto browse tree.
+
+## Android Auto
+
+The app serves its library to Android Auto through the same `MediaLibraryService` the phone uses,
+with roots for songs, albums, artists and folders.
+
+A sideloaded build does not show up in the car by default. On the phone, in Android Auto:
+
+1. Open the settings and tap the version at the bottom about ten times to unlock developer mode.
+2. In the developer settings, switch on **Unknown sources**.
+3. Reconnect to the car, or restart the Desktop Head Unit.
+
+This applies to media apps, which is what this is, so no code changes are involved.
