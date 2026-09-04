@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
@@ -28,7 +30,9 @@ import com.cdelarue.localmusic.playback.PlayerState
 @Composable
 fun MiniPlayer(
     state: PlayerState,
+    isFavourite: Boolean,
     onExpand: () -> Unit,
+    onToggleFavourite: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     modifier: Modifier = Modifier,
@@ -69,6 +73,17 @@ fun MiniPlayer(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(onClick = onToggleFavourite) {
+                    Icon(
+                        imageVector = if (isFavourite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                        tint = if (isFavourite) {
+                            MaterialTheme.colorScheme.secondary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     )
                 }
                 IconButton(onClick = onPlayPause) {

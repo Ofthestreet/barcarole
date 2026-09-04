@@ -108,6 +108,7 @@ I = {
   "disc": '<circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="2"></circle>',
   "trash": '<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path>',
   "plus": '<path d="M12 5v14M5 12h14"></path>',
+  "heart": '<path d="M12 20s-7-4.4-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.8C19 15.6 12 20 12 20z"></path>',
 }
 
 
@@ -134,6 +135,7 @@ def mini(playing=True, progress=42):
   <div class="mini-row">
     <div class="meta"><div class="t1" style="font-size:14px">Digital love</div>
       <div class="t2">Daft Punk</div></div>
+    <div class="iconbtn" style="width:44px;height:44px;color:var(--coral)">{icon(I["heart"], 22, "currentColor", "currentColor")}</div>
     <div class="iconbtn" style="width:44px;height:44px;color:var(--on)">{icon(ic, 24, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
     <div class="iconbtn" style="width:44px;height:44px;color:var(--on)">{icon(I["next"], 24, "currentColor", "currentColor")}</div>
   </div>

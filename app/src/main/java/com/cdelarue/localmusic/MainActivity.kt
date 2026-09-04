@@ -37,6 +37,7 @@ import com.cdelarue.localmusic.data.LibraryTab
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.data.stats.PlaylistId
 import com.cdelarue.localmusic.data.stats.Playlists
+import com.cdelarue.localmusic.playback.BrowseIds
 import com.cdelarue.localmusic.ui.detail.TrackListScreen
 import com.cdelarue.localmusic.ui.library.LibraryScreen
 import com.cdelarue.localmusic.ui.library.FoldersScreen
@@ -130,6 +131,8 @@ private fun LocalMusicApp(
         val navController = rememberNavController()
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         var selectedTab by rememberSaveable { mutableStateOf(LibraryTab.SONGS) }
+        val playingSongId = playerState.current?.mediaId?.let { BrowseIds.songIdOf(it) }
+        val playingIsFavourite = playingSongId != null && playingSongId in favouriteIds
         val onSongClick: (List<Song>, Song) -> Unit = playerViewModel::play
         var actionSheetSong by remember { mutableStateOf<Song?>(null) }
         val onSongLongClick: (Song) -> Unit = { actionSheetSong = it }
@@ -137,7 +140,6 @@ private fun LocalMusicApp(
         actionSheetSong?.let { song ->
             SongActionsSheet(
                 song = song,
-                isFavourite = song.id in favouriteIds,
                 onDismiss = { actionSheetSong = null },
                 onPlayNext = {
                     playerViewModel.playNext(listOf(song))
@@ -145,10 +147,6 @@ private fun LocalMusicApp(
                 },
                 onAddToQueue = {
                     playerViewModel.addToQueue(listOf(song))
-                    actionSheetSong = null
-                },
-                onToggleFavourite = {
-                    viewModel.toggleFavourite(song.id)
                     actionSheetSong = null
                 },
             )
@@ -240,13 +238,11 @@ private fun LocalMusicApp(
                 }
 
                 composable(Routes.PLAYER) {
-                    val currentSongId = playerState.current?.mediaId
-                        ?.let { com.cdelarue.localmusic.playback.BrowseIds.songIdOf(it) }
                     NowPlayingScreen(
                         state = playerState,
-                        isFavourite = currentSongId != null && currentSongId in favouriteIds,
+                        isFavourite = playingIsFavourite,
                         onBack = { navController.popBackStackSafely() },
-                        onToggleFavourite = { currentSongId?.let(viewModel::toggleFavourite) },
+                        onToggleFavourite = { playingSongId?.let(viewModel::toggleFavourite) },
                         onOpenQueue = {
                             selectedTab = LibraryTab.QUEUE
                             navController.popBackStackSafely()
@@ -317,7 +313,9 @@ private fun LocalMusicApp(
             if (currentRoute != Routes.PLAYER && playerState.current != null) {
                 MiniPlayer(
                     state = playerState,
+                    isFavourite = playingIsFavourite,
                     onExpand = { navController.navigate(Routes.PLAYER) },
+                    onToggleFavourite = { playingSongId?.let(viewModel::toggleFavourite) },
                     onPlayPause = playerViewModel::togglePlayPause,
                     onNext = playerViewModel::next,
                     modifier = Modifier.navigationBarsPadding(),
