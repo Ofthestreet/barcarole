@@ -2,7 +2,6 @@ package com.cdelarue.localmusic.playback
 
 import android.content.ComponentName
 import android.content.Context
-import android.net.Uri
 import androidx.core.content.ContextCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -28,7 +27,6 @@ data class QueueEntry(
     val mediaId: String,
     val title: String,
     val artist: String,
-    val artworkUri: Uri?,
 )
 
 data class PlayerState(
@@ -280,7 +278,6 @@ class PlayerConnection @Inject constructor(
                 mediaId = item.mediaId,
                 title = item.mediaMetadata.title?.toString().orEmpty(),
                 artist = item.mediaMetadata.artist?.toString().orEmpty(),
-                artworkUri = item.mediaMetadata.artworkUri,
             )
         }
         val index = player.currentMediaItemIndex

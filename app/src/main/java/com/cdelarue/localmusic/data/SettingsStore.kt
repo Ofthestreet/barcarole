@@ -17,7 +17,7 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 data class Settings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = true,
+    val dynamicColor: Boolean = false,
     val minTrackSeconds: Int = 30,
     val sortOrders: Map<LibraryTab, SortOrder> = emptyMap(),
 ) {
@@ -32,7 +32,7 @@ class SettingsStore @Inject constructor(private val context: Context) {
     val settings: Flow<Settings> = context.dataStore.data.map { prefs ->
         Settings(
             themeMode = prefs[KeyTheme]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM,
-            dynamicColor = prefs[KeyDynamicColor] ?: true,
+            dynamicColor = prefs[KeyDynamicColor] ?: false,
             minTrackSeconds = prefs[KeyMinTrackSeconds] ?: 30,
             sortOrders = LibraryTab.entries.associateWith { tab ->
                 val key = prefs[sortKeyFor(tab)]?.let { runCatching { SongSort.valueOf(it) }.getOrNull() } ?: SongSort.TITLE

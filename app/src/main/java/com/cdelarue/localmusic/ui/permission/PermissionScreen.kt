@@ -3,10 +3,13 @@ package com.cdelarue.localmusic.ui.permission
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,10 +17,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
+import com.cdelarue.localmusic.R
 
 @Composable
 fun PermissionScreen(
@@ -31,6 +36,14 @@ fun PermissionScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_illustration),
+            contentDescription = null,
+            modifier = Modifier
+                .size(112.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .padding(bottom = 8.dp),
+        )
         Text(
             text = "Access to your audio files",
             style = MaterialTheme.typography.titleLarge,

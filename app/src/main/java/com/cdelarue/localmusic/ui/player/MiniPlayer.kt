@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -25,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cdelarue.localmusic.playback.PlayerState
-import com.cdelarue.localmusic.ui.components.ArtworkUri
 
 @Composable
 fun MiniPlayer(
@@ -54,11 +52,10 @@ fun MiniPlayer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onExpand)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                ArtworkUri(uri = track.artworkUri, modifier = Modifier.size(44.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = track.title,

@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,7 +43,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.cdelarue.localmusic.playback.PlayerState
-import com.cdelarue.localmusic.ui.components.ArtworkUri
 import com.cdelarue.localmusic.util.formatDuration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +98,7 @@ fun NowPlayingScreen(
                 .padding(insets)
                 .fillMaxSize()
                 .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Swiping the artwork moves through the queue, which is how the gesture reads to anyone
             // who has used a music player before.
@@ -118,35 +116,44 @@ fun NowPlayingScreen(
                     if (page != state.queueIndex) onSeekToIndex(page)
                 }
             }
+            // With no cover to show, the title is the thing you look at - and the swipe that
+            // used to live on the artwork lives here instead.
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.fillMaxWidth(),
-                pageSpacing = 16.dp,
+                modifier = Modifier.weight(1f),
+                pageSpacing = 24.dp,
             ) { page ->
-                ArtworkUri(
-                    uri = state.queue.getOrNull(page)?.artworkUri,
-                    corner = 16,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f),
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = track.title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Start,
-                )
-                Text(
-                    text = track.artist,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                val entry = state.queue.getOrNull(page)
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = entry?.title.orEmpty(),
+                        style = MaterialTheme.typography.displaySmall,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Start,
+                    )
+                    Text(
+                        text = entry?.artist.orEmpty(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                    if (state.album.isNotEmpty()) {
+                        Text(
+                            text = state.album,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                }
             }
 
             SeekBar(state = state, onSeek = onSeek)

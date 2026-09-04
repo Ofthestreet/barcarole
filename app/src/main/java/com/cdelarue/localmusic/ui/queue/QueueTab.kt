@@ -11,30 +11,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,64 +42,70 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.cdelarue.localmusic.playback.PlayerState
-import com.cdelarue.localmusic.ui.components.ArtworkUri
 import com.cdelarue.localmusic.ui.components.EmptyState
+import com.cdelarue.localmusic.util.formatDuration
+import com.cdelarue.localmusic.util.pluralCount
 
-private val RowHeight = 64.dp
+private val RowHeight = 56.dp
 
+/**
+ * The queue is a library tab, not a screen of its own, so it carries its own action row instead of
+ * a top bar.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QueueScreen(
+fun QueueTab(
     state: PlayerState,
-    onBack: () -> Unit,
     onPlayIndex: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
     onRemove: (Int) -> Unit,
     onClear: () -> Unit,
     onToggleShuffle: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    // Dragging moves the item a row at a time, so the player's own queue stays the source of truth
-    // and the list never has to hold a second, temporary ordering.
+    // Dragging moves the item a row at a time and hands the move straight to the player, so the
+    // queue never holds a second, temporary ordering.
     var dragIndex by remember { mutableStateOf<Int?>(null) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     val rowHeightPx = with(LocalDensity.current) { RowHeight.toPx() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Queue") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onToggleShuffle) {
-                        Icon(
-                            imageVector = Icons.Rounded.Shuffle,
-                            contentDescription = if (state.shuffleEnabled) "Shuffle on" else "Shuffle off",
-                            tint = if (state.shuffleEnabled) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                        )
-                    }
-                    TextButton(onClick = onClear) { Text("Clear") }
-                },
+    if (state.queue.isEmpty()) {
+        EmptyState(
+            title = "The queue is empty",
+            body = "Play something from the library and it shows up here.",
+            modifier = modifier,
+        )
+        return
+    }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = pluralCount(state.queue.size, "track"),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
             )
-        },
-    ) { insets ->
-        if (state.queue.isEmpty()) {
-            EmptyState(
-                title = "The queue is empty",
-                body = "Play something from the library and it shows up here.",
-                modifier = Modifier.padding(insets),
-            )
-            return@Scaffold
+            IconButton(onClick = onToggleShuffle) {
+                Icon(
+                    imageVector = Icons.Rounded.Shuffle,
+                    contentDescription = if (state.shuffleEnabled) "Shuffle on" else "Shuffle off",
+                    tint = if (state.shuffleEnabled) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
+            TextButton(onClick = onClear) { Text("Clear") }
         }
 
-        LazyColumn(modifier = Modifier.padding(insets).fillMaxSize()) {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
             itemsIndexed(
                 items = state.queue,
                 key = { index, entry -> "$index-${entry.mediaId}" },
@@ -130,7 +132,6 @@ fun QueueScreen(
                     QueueRow(
                         title = entry.title,
                         artist = entry.artist,
-                        artworkUri = entry.artworkUri,
                         isCurrent = index == state.queueIndex,
                         isPlaying = state.isPlaying && index == state.queueIndex,
                         onClick = { onPlayIndex(index) },
@@ -174,7 +175,6 @@ fun QueueScreen(
 private fun QueueRow(
     title: String,
     artist: String,
-    artworkUri: android.net.Uri?,
     isCurrent: Boolean,
     isPlaying: Boolean,
     onClick: () -> Unit,
@@ -202,11 +202,10 @@ private fun QueueRow(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = handleModifier,
         )
-        ArtworkUri(uri = artworkUri, modifier = Modifier.size(40.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

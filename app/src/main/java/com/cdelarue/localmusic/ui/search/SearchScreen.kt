@@ -30,9 +30,8 @@ import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.ui.components.ArtistRow
 import com.cdelarue.localmusic.ui.components.EmptyState
 import com.cdelarue.localmusic.ui.components.FolderRow
-import com.cdelarue.localmusic.ui.components.IconTextRow
+import com.cdelarue.localmusic.ui.components.TextRow
 import com.cdelarue.localmusic.ui.components.SongRow
-import androidx.compose.material.icons.rounded.Album as AlbumIcon
 import com.cdelarue.localmusic.util.pluralCount
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,8 +97,7 @@ fun SearchScreen(
             }
             section("Albums", results.albums.size)
             items(results.albums, key = { "album-${it.id}" }) { album ->
-                IconTextRow(
-                    icon = Icons.Rounded.AlbumIcon,
+                TextRow(
                     title = album.title,
                     subtitle = "${album.artist} · ${pluralCount(album.songCount, "track")}",
                     onClick = { onAlbumClick(album) },

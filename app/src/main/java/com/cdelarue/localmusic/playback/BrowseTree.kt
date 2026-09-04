@@ -62,8 +62,8 @@ object BrowseTree {
     /** Root tabs, matching what the phone UI shows. */
     fun rootChildren(): List<BrowseNode> = listOf(
         BrowseNode(BrowseIds.TAB_SONGS, "Songs"),
-        BrowseNode(BrowseIds.TAB_ALBUMS, "Albums", childStyle = BrowseStyle.GRID),
-        BrowseNode(BrowseIds.TAB_ARTISTS, "Artists", childStyle = BrowseStyle.GRID),
+        BrowseNode(BrowseIds.TAB_ALBUMS, "Albums"),
+        BrowseNode(BrowseIds.TAB_ARTISTS, "Artists"),
         BrowseNode(BrowseIds.TAB_FOLDERS, "Folders"),
     )
 

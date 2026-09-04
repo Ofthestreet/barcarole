@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -42,11 +43,13 @@ fun SettingsScreen(
     settings: Settings,
     supportsDynamicColor: Boolean,
     songCount: Int,
+    folderCount: Int,
     onBack: () -> Unit,
     onThemeMode: (ThemeMode) -> Unit,
     onDynamicColor: (Boolean) -> Unit,
     onMinTrackSeconds: (Int) -> Unit,
     onRescan: () -> Unit,
+    onBrowseFolders: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -91,6 +94,29 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionTitle("Library")
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onBrowseFolders)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Browse by folder", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = pluralCount(folderCount, "folder") + " on this device",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
             var sliderValue by remember(settings.minTrackSeconds) {
                 mutableFloatStateOf(settings.minTrackSeconds.toFloat())

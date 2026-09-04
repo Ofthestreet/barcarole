@@ -6,9 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -28,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cdelarue.localmusic.data.Song
-import com.cdelarue.localmusic.ui.components.Artwork
 import com.cdelarue.localmusic.ui.components.EmptyState
 import com.cdelarue.localmusic.ui.components.SongRow
 import com.cdelarue.localmusic.util.formatDuration
@@ -41,7 +39,6 @@ fun TrackListScreen(
     title: String,
     subtitle: String,
     songs: List<Song>,
-    artworkAlbumId: Long?,
     onBack: () -> Unit,
     onSongClick: (List<Song>, Song) -> Unit,
     onSongLongClick: (Song) -> Unit,
@@ -70,22 +67,18 @@ fun TrackListScreen(
         }
         LazyColumn(modifier = Modifier.padding(insets).fillMaxSize()) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    if (artworkAlbumId != null) {
-                        Artwork(albumId = artworkAlbumId, corner = 12, modifier = Modifier.size(96.dp))
+                    if (subtitle.isNotEmpty()) {
+                        Text(text = subtitle, style = MaterialTheme.typography.titleMedium)
                     }
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(text = subtitle, style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            text = "${pluralCount(songs.size, "track")} · ${formatDuration(songs.sumOf { it.durationMs })}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Text(
+                        text = "${pluralCount(songs.size, "track")} · ${formatDuration(songs.sumOf { it.durationMs })}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -101,11 +94,12 @@ fun TrackListScreen(
                     }
                 }
             }
-            items(songs, key = { it.id }) { song ->
+            itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->
                 SongRow(
                     song = song,
                     onClick = { onSongClick(songs, song) },
                     onLongClick = { onSongLongClick(song) },
+                    trackNumber = index + 1,
                 )
             }
         }

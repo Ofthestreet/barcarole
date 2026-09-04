@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,15 +33,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.cdelarue.localmusic.data.LibraryIndex
+import com.cdelarue.localmusic.data.LibraryTab
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.ui.detail.TrackListScreen
 import com.cdelarue.localmusic.ui.library.LibraryScreen
+import com.cdelarue.localmusic.ui.library.FoldersScreen
 import com.cdelarue.localmusic.ui.library.LibraryViewModel
 import com.cdelarue.localmusic.ui.permission.PermissionScreen
 import com.cdelarue.localmusic.ui.player.MiniPlayer
 import com.cdelarue.localmusic.ui.player.NowPlayingScreen
 import com.cdelarue.localmusic.ui.player.PlayerViewModel
-import com.cdelarue.localmusic.ui.queue.QueueScreen
 import com.cdelarue.localmusic.ui.components.SongActionsSheet
 import com.cdelarue.localmusic.ui.search.SearchScreen
 import com.cdelarue.localmusic.ui.settings.SettingsScreen
@@ -63,7 +65,7 @@ private object Routes {
     const val SEARCH = "search"
     const val SETTINGS = "settings"
     const val PLAYER = "player"
-    const val QUEUE = "queue"
+    const val FOLDERS = "folders"
     const val ALBUM = "album/{albumId}"
     const val ARTIST = "artist/{artistId}"
     const val FOLDER = "folder?path={folderPath}"
@@ -121,6 +123,7 @@ private fun LocalMusicApp(
 
         val navController = rememberNavController()
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+        var selectedTab by rememberSaveable { mutableStateOf(LibraryTab.SONGS) }
         val onSongClick: (List<Song>, Song) -> Unit = playerViewModel::play
         var actionSheetSong by remember { mutableStateOf<Song?>(null) }
         val onSongLongClick: (Song) -> Unit = { actionSheetSong = it }
@@ -149,15 +152,22 @@ private fun LocalMusicApp(
                 composable(Routes.LIBRARY) {
                     LibraryScreen(
                         state = state,
+                        playerState = playerState,
+                        selectedTab = selectedTab,
+                        onSelectTab = { selectedTab = it },
                         onSort = viewModel::setSort,
                         onRescan = viewModel::rescan,
                         onSongClick = onSongClick,
                         onSongLongClick = onSongLongClick,
                         onAlbumClick = { navController.navigate(Routes.album(it.id)) },
                         onArtistClick = { navController.navigate(Routes.artist(it.id)) },
-                        onFolderClick = { navController.navigate(Routes.folder(it.path)) },
                         onSearchClick = { navController.navigate(Routes.SEARCH) },
                         onSettingsClick = { navController.navigate(Routes.SETTINGS) },
+                        onQueuePlayIndex = playerViewModel::seekToQueueIndex,
+                        onQueueMove = playerViewModel::moveQueueItem,
+                        onQueueRemove = playerViewModel::removeFromQueue,
+                        onQueueClear = playerViewModel::clearQueue,
+                        onToggleShuffle = playerViewModel::toggleShuffle,
                     )
                 }
 
@@ -180,23 +190,21 @@ private fun LocalMusicApp(
                         settings = state.settings,
                         supportsDynamicColor = supportsDynamicColor,
                         songCount = state.library.songs.size,
+                        folderCount = state.library.folders.size,
                         onBack = { navController.popBackStackSafely() },
                         onThemeMode = viewModel::setThemeMode,
                         onDynamicColor = viewModel::setDynamicColor,
                         onMinTrackSeconds = viewModel::setMinTrackSeconds,
                         onRescan = viewModel::rescan,
+                        onBrowseFolders = { navController.navigate(Routes.FOLDERS) },
                     )
                 }
 
-                composable(Routes.QUEUE) {
-                    QueueScreen(
-                        state = playerState,
+                composable(Routes.FOLDERS) {
+                    FoldersScreen(
+                        folders = state.library.folders,
                         onBack = { navController.popBackStackSafely() },
-                        onPlayIndex = playerViewModel::seekToQueueIndex,
-                        onMove = playerViewModel::moveQueueItem,
-                        onRemove = playerViewModel::removeFromQueue,
-                        onClear = playerViewModel::clearQueue,
-                        onToggleShuffle = playerViewModel::toggleShuffle,
+                        onFolderClick = { navController.navigate(Routes.folder(it.path)) },
                     )
                 }
 
@@ -204,7 +212,10 @@ private fun LocalMusicApp(
                     NowPlayingScreen(
                         state = playerState,
                         onBack = { navController.popBackStackSafely() },
-                        onOpenQueue = { navController.navigate(Routes.QUEUE) },
+                        onOpenQueue = {
+                            selectedTab = LibraryTab.QUEUE
+                            navController.popBackStackSafely()
+                        },
                         onPlayPause = playerViewModel::togglePlayPause,
                         onNext = playerViewModel::next,
                         onPrevious = playerViewModel::previous,
@@ -222,7 +233,6 @@ private fun LocalMusicApp(
                         title = album?.title ?: "Album",
                         subtitle = album?.artist.orEmpty(),
                         songs = LibraryIndex.tracksOfAlbum(state.library.songs, albumId),
-                        artworkAlbumId = albumId,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
                         onSongLongClick = onSongLongClick,
@@ -239,7 +249,6 @@ private fun LocalMusicApp(
                         title = artist?.name ?: "Artist",
                         subtitle = artist?.let { "${it.albumCount} albums" }.orEmpty(),
                         songs = songs,
-                        artworkAlbumId = songs.firstOrNull()?.albumId,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
                         onSongLongClick = onSongLongClick,
@@ -260,7 +269,6 @@ private fun LocalMusicApp(
                         title = path.substringAfterLast('/', missingDelimiterValue = path),
                         subtitle = path,
                         songs = songs,
-                        artworkAlbumId = songs.firstOrNull()?.albumId,
                         onBack = { navController.popBackStackSafely() },
                         onSongClick = onSongClick,
                         onSongLongClick = onSongLongClick,
