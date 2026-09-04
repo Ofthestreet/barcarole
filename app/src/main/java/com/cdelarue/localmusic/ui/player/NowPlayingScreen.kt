@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Pause
@@ -49,8 +51,10 @@ import com.cdelarue.localmusic.util.formatDuration
 @Composable
 fun NowPlayingScreen(
     state: PlayerState,
+    isFavourite: Boolean,
     onBack: () -> Unit,
     onOpenQueue: () -> Unit,
+    onToggleFavourite: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -77,6 +81,17 @@ fun NowPlayingScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onToggleFavourite) {
+                        Icon(
+                            imageVector = if (isFavourite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                            tint = if (isFavourite) {
+                                MaterialTheme.colorScheme.secondary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
                     IconButton(onClick = onOpenQueue) {
                         Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue")
                     }

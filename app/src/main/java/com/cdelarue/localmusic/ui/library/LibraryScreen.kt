@@ -45,6 +45,9 @@ import com.cdelarue.localmusic.ui.components.AlphabetRail
 import com.cdelarue.localmusic.ui.components.ArtistRow
 import com.cdelarue.localmusic.ui.components.EmptyState
 import com.cdelarue.localmusic.ui.components.SongRow
+import com.cdelarue.localmusic.data.stats.PlaylistId
+import com.cdelarue.localmusic.data.stats.PlaylistSummary
+import com.cdelarue.localmusic.ui.playlists.PlaylistsTab
 import com.cdelarue.localmusic.ui.queue.QueueTab
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +55,7 @@ import com.cdelarue.localmusic.ui.queue.QueueTab
 fun LibraryScreen(
     state: LibraryUiState,
     playerState: PlayerState,
+    playlists: List<PlaylistSummary>,
     selectedTab: LibraryTab,
     onSelectTab: (LibraryTab) -> Unit,
     onSort: (LibraryTab, SongSort) -> Unit,
@@ -67,9 +71,12 @@ fun LibraryScreen(
     onQueueRemove: (Int) -> Unit,
     onQueueClear: () -> Unit,
     onToggleShuffle: () -> Unit,
+    onOpenPlaylist: (PlaylistId) -> Unit,
 ) {
     var sortMenuOpen by remember { mutableStateOf(false) }
-    val sortable = selectedTab != LibraryTab.QUEUE
+    val sortable = selectedTab == LibraryTab.SONGS ||
+        selectedTab == LibraryTab.ALBUMS ||
+        selectedTab == LibraryTab.ARTISTS
 
     Scaffold(
         topBar = {
@@ -127,7 +134,7 @@ fun LibraryScreen(
                 }
             }
 
-            if (state.hasScanned && state.library.isEmpty && selectedTab != LibraryTab.QUEUE) {
+            if (state.hasScanned && state.library.isEmpty && sortable) {
                 EmptyState(
                     title = "No music found",
                     body = "Copy audio files onto the phone, then use the rescan button in the top bar.",
@@ -139,6 +146,7 @@ fun LibraryScreen(
                 LibraryTab.SONGS -> SongsTab(state.songsSorted(LibraryTab.SONGS), onSongClick, onSongLongClick)
                 LibraryTab.ALBUMS -> AlbumsTab(state.library.albums, onAlbumClick)
                 LibraryTab.ARTISTS -> ArtistsTab(state.library.artists, onArtistClick)
+                LibraryTab.PLAYLISTS -> PlaylistsTab(playlists = playlists, onOpen = onOpenPlaylist)
                 LibraryTab.QUEUE -> QueueTab(
                     state = playerState,
                     onPlayIndex = onQueuePlayIndex,
@@ -217,6 +225,7 @@ private fun LibraryTab.label(): String = when (this) {
     LibraryTab.ALBUMS -> "Albums"
     LibraryTab.ARTISTS -> "Artists"
     LibraryTab.QUEUE -> "Queue"
+    LibraryTab.PLAYLISTS -> "Playlists"
 }
 
 private fun SongSort.label(): String = when (this) {

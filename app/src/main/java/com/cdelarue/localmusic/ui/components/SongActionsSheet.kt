@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.PlaylistAdd
 import androidx.compose.material.icons.rounded.QueuePlayNext
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,9 +30,11 @@ import com.cdelarue.localmusic.data.Song
 @Composable
 fun SongActionsSheet(
     song: Song,
+    isFavourite: Boolean,
     onDismiss: () -> Unit,
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit,
+    onToggleFavourite: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.navigationBarsPadding()) {
@@ -49,6 +53,11 @@ fun SongActionsSheet(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            SheetAction(
+                icon = if (isFavourite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                label = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                onClick = onToggleFavourite,
+            )
             SheetAction(Icons.Rounded.QueuePlayNext, "Play next", onPlayNext)
             SheetAction(Icons.Rounded.PlaylistAdd, "Add to queue", onAddToQueue)
         }

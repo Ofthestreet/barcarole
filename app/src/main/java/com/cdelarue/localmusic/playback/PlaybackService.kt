@@ -13,11 +13,19 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionError
 import com.cdelarue.localmusic.data.LibraryRepository
+import com.cdelarue.localmusic.data.stats.PlaylistRepository
 import com.cdelarue.localmusic.data.albumArtUri
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import androidx.media3.common.Player
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -33,6 +41,12 @@ import javax.inject.Inject
 class PlaybackService : MediaLibraryService() {
 
     @Inject lateinit var libraryRepository: LibraryRepository
+
+    @Inject lateinit var playlistRepository: PlaylistRepository
+
+    @Inject lateinit var appScope: CoroutineScope
+
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var player: ExoPlayer? = null
     private var session: MediaLibrarySession? = null
@@ -52,8 +66,10 @@ class PlaybackService : MediaLibraryService() {
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
 
+        exoPlayer.addListener(trackChanges)
         player = exoPlayer
         session = MediaLibrarySession.Builder(this, exoPlayer, LibraryCallback()).build()
+        startListenTracking()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = session
@@ -67,7 +83,41 @@ class PlaybackService : MediaLibraryService() {
         super.onTaskRemoved(rootIntent)
     }
 
+    /**
+     * A listen counts once the track has actually been listened to — half of it, or thirty
+     * seconds, whichever comes first — so skipping through the library does not inflate the
+     * playlists. Player events do not arrive while a track simply plays on, so the position is
+     * sampled instead; the flag resets on every transition, which is what makes repeat-one count
+     * each time round.
+     */
+    private var countedCurrent = false
+
+    private val trackChanges = object : Player.Listener {
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            countedCurrent = false
+        }
+    }
+
+    private fun startListenTracking() {
+        serviceScope.launch {
+            while (true) {
+                delay(SAMPLE_MS)
+                val current = player ?: continue
+                if (countedCurrent || !current.isPlaying) continue
+                val mediaId = current.currentMediaItem?.mediaId ?: continue
+                val duration = current.duration
+                val threshold = if (duration > 0) minOf(duration / 2, COUNT_AFTER_MS) else COUNT_AFTER_MS
+                if (current.currentPosition < threshold) continue
+                countedCurrent = true
+                val songId = BrowseIds.songIdOf(mediaId) ?: continue
+                appScope.launch { playlistRepository.recordPlay(songId) }
+            }
+        }
+    }
+
     override fun onDestroy() {
+        serviceScope.cancel()
+        player?.removeListener(trackChanges)
         session?.release()
         player?.release()
         session = null
@@ -244,5 +294,7 @@ class PlaybackService : MediaLibraryService() {
         const val CONTENT_STYLE_PLAYABLE_HINT = "android.media.browse.CONTENT_STYLE_PLAYABLE_HINT"
         const val CONTENT_STYLE_LIST = 1
         const val CONTENT_STYLE_GRID = 2
+        const val COUNT_AFTER_MS = 30_000L
+        const val SAMPLE_MS = 5_000L
     }
 }

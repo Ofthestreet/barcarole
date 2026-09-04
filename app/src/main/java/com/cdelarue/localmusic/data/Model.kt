@@ -57,4 +57,4 @@ enum class SongSort { TITLE, ARTIST, ALBUM, DATE_ADDED, DURATION }
 data class SortOrder(val key: SongSort = SongSort.TITLE, val ascending: Boolean = true)
 
 /** The four library tabs. Folder browsing lives in settings, not here. */
-enum class LibraryTab { SONGS, ALBUMS, ARTISTS, QUEUE }
+enum class LibraryTab { SONGS, ALBUMS, ARTISTS, QUEUE, PLAYLISTS }

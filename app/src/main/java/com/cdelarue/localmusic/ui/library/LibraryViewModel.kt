@@ -12,6 +12,9 @@ import com.cdelarue.localmusic.data.SettingsStore
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.data.SongSort
 import com.cdelarue.localmusic.data.SortOrder
+import com.cdelarue.localmusic.data.stats.PlaylistId
+import com.cdelarue.localmusic.data.stats.PlaylistRepository
+import com.cdelarue.localmusic.data.stats.PlaylistSummary
 import com.cdelarue.localmusic.data.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,7 +44,22 @@ data class LibraryUiState(
 class LibraryViewModel @Inject constructor(
     private val repository: LibraryRepository,
     private val settingsStore: SettingsStore,
+    private val playlistRepository: PlaylistRepository,
 ) : ViewModel() {
+
+    val playlists: StateFlow<List<PlaylistSummary>> = combine(
+        playlistRepository.data,
+        repository.library,
+    ) { _, _ -> playlistRepository.summaries() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val favouriteIds: StateFlow<Set<Long>> = playlistRepository.favouriteIds
+        .map { it.toSet() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+    fun songsOf(id: PlaylistId): List<Song> = playlistRepository.songsOf(id)
+
+    fun toggleFavourite(songId: Long) = playlistRepository.toggleFavourite(songId)
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()

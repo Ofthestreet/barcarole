@@ -35,6 +35,8 @@ import androidx.navigation.navArgument
 import com.cdelarue.localmusic.data.LibraryIndex
 import com.cdelarue.localmusic.data.LibraryTab
 import com.cdelarue.localmusic.data.Song
+import com.cdelarue.localmusic.data.stats.PlaylistId
+import com.cdelarue.localmusic.data.stats.Playlists
 import com.cdelarue.localmusic.ui.detail.TrackListScreen
 import com.cdelarue.localmusic.ui.library.LibraryScreen
 import com.cdelarue.localmusic.ui.library.FoldersScreen
@@ -66,6 +68,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val PLAYER = "player"
     const val FOLDERS = "folders"
+    const val PLAYLIST = "playlist/{playlistId}"
     const val ALBUM = "album/{albumId}"
     const val ARTIST = "artist/{artistId}"
     const val FOLDER = "folder?path={folderPath}"
@@ -73,6 +76,7 @@ private object Routes {
     fun album(albumId: Long) = "album/$albumId"
     fun artist(artistId: Long) = "artist/$artistId"
     fun folder(path: String) = "folder?path=${Uri.encode(path)}"
+    fun playlist(id: PlaylistId) = "playlist/${id.name}"
 }
 
 @Composable
@@ -85,6 +89,8 @@ private fun LocalMusicApp(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val playerState by playerViewModel.state.collectAsStateWithLifecycle()
+    val playlists by viewModel.playlists.collectAsStateWithLifecycle()
+    val favouriteIds by viewModel.favouriteIds.collectAsStateWithLifecycle()
 
     var hasPermission by remember { mutableStateOf(AudioPermission.isGranted(context)) }
     var permanentlyDenied by remember { mutableStateOf(false) }
@@ -131,6 +137,7 @@ private fun LocalMusicApp(
         actionSheetSong?.let { song ->
             SongActionsSheet(
                 song = song,
+                isFavourite = song.id in favouriteIds,
                 onDismiss = { actionSheetSong = null },
                 onPlayNext = {
                     playerViewModel.playNext(listOf(song))
@@ -138,6 +145,10 @@ private fun LocalMusicApp(
                 },
                 onAddToQueue = {
                     playerViewModel.addToQueue(listOf(song))
+                    actionSheetSong = null
+                },
+                onToggleFavourite = {
+                    viewModel.toggleFavourite(song.id)
                     actionSheetSong = null
                 },
             )
@@ -153,6 +164,7 @@ private fun LocalMusicApp(
                     LibraryScreen(
                         state = state,
                         playerState = playerState,
+                        playlists = playlists,
                         selectedTab = selectedTab,
                         onSelectTab = { selectedTab = it },
                         onSort = viewModel::setSort,
@@ -168,6 +180,23 @@ private fun LocalMusicApp(
                         onQueueRemove = playerViewModel::removeFromQueue,
                         onQueueClear = playerViewModel::clearQueue,
                         onToggleShuffle = playerViewModel::toggleShuffle,
+                        onOpenPlaylist = { navController.navigate(Routes.playlist(it)) },
+                    )
+                }
+
+                composable(Routes.PLAYLIST) { entry ->
+                    val id = entry.arguments?.getString("playlistId")
+                        ?.let { name -> runCatching { PlaylistId.valueOf(name) }.getOrNull() }
+                    val songs = id?.let { viewModel.songsOf(it) }.orEmpty()
+                    TrackListScreen(
+                        title = id?.let { Playlists.title(it) } ?: "Playlist",
+                        subtitle = "",
+                        songs = songs,
+                        onBack = { navController.popBackStackSafely() },
+                        onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
+                        onPlayAll = playerViewModel::playAll,
+                        onShuffleAll = playerViewModel::shuffleAll,
                     )
                 }
 
@@ -209,9 +238,13 @@ private fun LocalMusicApp(
                 }
 
                 composable(Routes.PLAYER) {
+                    val currentSongId = playerState.current?.mediaId
+                        ?.let { com.cdelarue.localmusic.playback.BrowseIds.songIdOf(it) }
                     NowPlayingScreen(
                         state = playerState,
+                        isFavourite = currentSongId != null && currentSongId in favouriteIds,
                         onBack = { navController.popBackStackSafely() },
+                        onToggleFavourite = { currentSongId?.let(viewModel::toggleFavourite) },
                         onOpenQueue = {
                             selectedTab = LibraryTab.QUEUE
                             navController.popBackStackSafely()
