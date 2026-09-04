@@ -1,13 +1,69 @@
 {
   "artboards": [
-    { "file": "Permission.dc.html",    "x": 0,    "y": 0,   "w": 390, "h": 844, "title": "Permission" },
-    { "file": "Main.dc.html",          "x": 470,  "y": 0,   "w": 390, "h": 844, "title": "Library — Songs" },
-    { "file": "LibraryAlbums.dc.html", "x": 940,  "y": 0,   "w": 390, "h": 844, "title": "Library — Albums" },
-    { "file": "AlbumDetail.dc.html",   "x": 1410, "y": 0,   "w": 390, "h": 844, "title": "Album" },
-    { "file": "NowPlaying.dc.html",    "x": 0,    "y": 964, "w": 390, "h": 844, "title": "Now playing" },
-    { "file": "Queue.dc.html",         "x": 470,  "y": 964, "w": 390, "h": 844, "title": "Queue" },
-    { "file": "Search.dc.html",        "x": 940,  "y": 964, "w": 390, "h": 844, "title": "Search" },
-    { "file": "Settings.dc.html",      "x": 1410, "y": 964, "w": 390, "h": 844, "title": "Settings" }
+    {
+      "file": "Permission.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Permission"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Library — Songs"
+    },
+    {
+      "file": "LibraryAlbums.dc.html",
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Library — Albums"
+    },
+    {
+      "file": "AlbumDetail.dc.html",
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Album"
+    },
+    {
+      "file": "NowPlaying.dc.html",
+      "x": 0,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "title": "Now playing"
+    },
+    {
+      "file": "Queue.dc.html",
+      "x": 470,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "title": "Library — Queue"
+    },
+    {
+      "file": "Search.dc.html",
+      "x": 940,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "title": "Search"
+    },
+    {
+      "file": "Settings.dc.html",
+      "x": 1410,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "title": "Settings"
+    }
   ],
   "annotations": [
     {
@@ -22,8 +78,10 @@
       "x": 940,
       "y": -150,
       "w": 860,
-      "text": "Les écrans reprennent les écrans Compose existants : hauteurs de ligne 64dp, pochettes 48/40dp, lecteur 64dp.\nCe qui change côté code : le rail A-Z passe en turquoise, le morceau en cours de file est surligné, et le lecteur gagne de l'air autour de la pochette."
+      "text": "Sans pochettes, les listes sont purement typographiques et la grille d'albums devient une liste ; sur le lecteur, le titre prend la place de la pochette.\nLa file passe en quatrième onglet à la place des dossiers, qui rejoignent les réglages."
     }
   ],
-  "launch": { "view": "canvas" }
+  "launch": {
+    "view": "canvas"
+  }
 }

@@ -110,14 +110,6 @@ I = {
   "plus": '<path d="M12 5v14M5 12h14"></path>',
 }
 
-# Pochettes : aplats tires de l'icone, avec la note en surimpression.
-COVERS = ["#0286AE", "#00A6A8", "#3A5BB8", "#C4633F", "#1E7F8C", "#7A4B8F"]
-
-def art(size, i=0, radius=8, icon_size=None):
-    c = COVERS[i % len(COVERS)]
-    s = icon_size or max(14, size // 3)
-    return (f'<div class="art" style="width:{size}px;height:{size}px;background:{c};'
-            f'border-radius:{radius}px">{icon(I["note"], s, "rgba(255,255,255,.85)", "none", "1.6")}</div>')
 
 def appbar(title, icons, back=False):
     lead = f'<div class="iconbtn">{icon(I["back"])}</div>' if back else ''
@@ -126,12 +118,12 @@ def appbar(title, icons, back=False):
     return (f'<div class="appbar" style="{pad}">{lead}<h1>{title}</h1>{acts}</div>')
 
 def tabs(active):
-    names = ["Songs", "Albums", "Artists", "Folders"]
+    names = ["Songs", "Albums", "Artists", "Queue"]
     return '<div class="tabs">' + "".join(
         f'<div class="tab{" on" if n == active else ""}">{n}</div>' for n in names) + '</div>'
 
-def song_row(title, artist, album, dur, i):
-    return (f'<div class="row">{art(48, i)}'
+def song_row(title, artist, album, dur, i=0):
+    return (f'<div class="row" style="height:56px">'
             f'<div class="meta"><div class="t1">{title}</div>'
             f'<div class="t2">{artist} · {album}</div></div>'
             f'<div class="dur">{dur}</div></div>')
@@ -139,7 +131,7 @@ def song_row(title, artist, album, dur, i):
 def mini(playing=True, progress=42):
     ic = I["pause"] if playing else I["play"]
     return f"""<div class="mini">
-  <div class="mini-row">{art(44, 1, 6)}
+  <div class="mini-row">
     <div class="meta"><div class="t1" style="font-size:14px">Digital love</div>
       <div class="t2">Daft Punk</div></div>
     <div class="iconbtn" style="width:44px;height:44px;color:var(--on)">{icon(ic, 24, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
@@ -179,16 +171,16 @@ body = f"""<div class="screen">
 ALBUMS = [("Discovery", "Daft Punk"), ("Kind of Blue", "Miles Davis"),
           ("Rumours", "Fleetwood Mac"), ("Blue Train", "John Coltrane"),
           ("Consider the Birds", "Wovenhand"), ("Homework", "Daft Punk")]
+COUNTS = ["14 tracks", "5 tracks", "11 tracks", "5 tracks", "13 tracks", "16 tracks"]
 cards = "".join(
-    f"""<div>{art(163, i, 12, 48)}
-    <div class="t1" style="font-size:14px;margin-top:8px">{t}</div>
-    <div class="t2">{a}</div></div>""" for i, (t, a) in enumerate(ALBUMS))
+    f'<div class="row" style="height:64px">'
+    f'<div class="meta"><div class="t1">{t}</div>'
+    f'<div class="t2">{a} · {COUNTS[i]}</div></div></div>'
+    for i, (t, a) in enumerate(ALBUMS))
 body = f"""<div class="screen">
 {appbar("Library", ["search", "sort", "refresh", "gear"])}
 {tabs("Albums")}
-<div class="list" style="padding:8px 8px 0">
-  <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px 8px;padding:8px">{cards}</div>
-</div>
+<div class="list">{cards}</div>
 {mini()}
 </div>"""
 (OUT / "LibraryAlbums.dc.html").write_text(page(body), encoding="utf-8")
@@ -199,17 +191,15 @@ TRACKS = [("One More Time", "5:20"), ("Aerodynamic", "3:27"), ("Digital Love", "
           ("Harder, Better, Faster, Stronger", "3:45"), ("Crescendolls", "3:31"),
           ("Nightvision", "1:44"), ("Superheroes", "3:57")]
 tr = "".join(
-    f'<div class="row" style="height:56px">{art(40, (i + 1) % 6, 6)}'
+    f'<div class="row" style="height:56px">'
+    f'<div style="width:24px;font-size:14px;color:var(--on-var);font-variant-numeric:tabular-nums">{i + 1}</div>'
     f'<div class="meta"><div class="t1" style="font-size:15px">{t}</div></div>'
     f'<div class="dur">{d}</div></div>' for i, (t, d) in enumerate(TRACKS))
 body = f"""<div class="screen">
 {appbar("Discovery", [], back=True)}
-<div style="display:flex;gap:16px;padding:0 16px 16px;align-items:center">
-  {art(96, 0, 12, 34)}
-  <div>
-    <div style="font-size:16px">Daft Punk</div>
-    <div class="t2" style="margin-top:4px">14 tracks · 1:00:52</div>
-  </div>
+<div style="padding:0 16px 20px">
+  <div style="font-size:18px">Daft Punk</div>
+  <div class="t2" style="margin-top:6px">14 tracks · 1:00:52 · 2001</div>
 </div>
 <div style="display:flex;gap:12px;padding:0 16px 16px">
   <div class="btn fill">{icon(I["play"], 20, "currentColor", "currentColor")}<span>Play all</span></div>
@@ -227,10 +217,10 @@ body = f"""<div class="screen">
   <h1 style="font-size:14px;font-weight:500;text-align:center;color:var(--on-var)">Discovery</h1>
   <div class="iconbtn">{icon(I["queue"])}</div>
 </div>
-<div style="padding:8px 24px 0">{art(342, 0, 16, 96)}</div>
-<div style="padding:24px 24px 0">
-  <div style="font-size:24px;line-height:30px">Digital Love</div>
-  <div style="font-size:16px;color:var(--on-var);margin-top:4px">Daft Punk</div>
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:0 24px">
+  <div style="font-size:40px;line-height:48px;text-wrap:balance">Digital Love</div>
+  <div style="font-size:18px;line-height:26px;color:var(--on-var);margin-top:16px">Daft Punk</div>
+  <div style="font-size:13px;line-height:18px;color:var(--on-var);margin-top:4px">Discovery · 2001</div>
 </div>
 <div style="padding:24px 24px 0">
   <div style="height:4px;background:var(--outline);border-radius:2px;position:relative">
@@ -248,8 +238,7 @@ body = f"""<div class="screen">
   <div class="iconbtn" style="color:var(--on)">{icon(I["next"], 32, "currentColor", "currentColor")}</div>
   <div class="iconbtn">{icon(I["repeat"])}</div>
 </div>
-<div style="flex:1"></div>
-<div style="text-align:center;font-size:12px;color:var(--on-var);padding-bottom:32px">Track 3 of 14</div>
+<div style="text-align:center;font-size:12px;color:var(--on-var);padding:28px 0 40px">Track 3 of 14</div>
 </div>"""
 (OUT / "NowPlaying.dc.html").write_text(page(body), encoding="utf-8")
 
@@ -263,13 +252,14 @@ for i, (t, a, cur) in enumerate(QUEUE):
     bg = "background:var(--surface-sel);" if cur else ""
     tail = f'<div style="color:var(--primary)">{icon(I["volume"], 20)}</div>' if cur else ""
     qr += (f'<div class="row" style="height:64px;{bg}">'
-           f'<div style="color:var(--on-var)">{icon(I["drag"], 20)}</div>{art(40, i % 6, 6)}'
+           f'<div style="color:var(--on-var)">{icon(I["drag"], 20)}</div>'
            f'<div class="meta"><div class="t1" style="font-size:15px">{t}</div>'
            f'<div class="t2">{a}</div></div>{tail}</div>')
 body = f"""<div class="screen">
-<div class="appbar" style="padding:0 4px">
-  <div class="iconbtn">{icon(I["back"])}</div>
-  <h1>Queue</h1>
+{appbar("Library", ["search", "sort", "refresh", "gear"])}
+{tabs("Queue")}
+<div style="display:flex;align-items:center;padding:4px 4px 4px 16px">
+  <div class="t2" style="flex:1">8 tracks · 34:12</div>
   <div class="iconbtn" style="color:var(--primary)">{icon(I["shuffle"])}</div>
   <div style="height:48px;display:flex;align-items:center;padding:0 12px;font-size:14px;font-weight:500;color:var(--primary)">Clear</div>
 </div>
@@ -281,9 +271,10 @@ print("3-5 ok")
 
 # 6. Recherche
 def plain_row(ic, t, s, i=None):
-    left = art(48, i, 8) if i is not None else (
-        f'<div class="art" style="width:48px;height:48px;background:var(--surface-hi);border-radius:24px;color:var(--on-var)">{icon(ic, 22)}</div>')
-    return (f'<div class="row">{left}<div class="meta"><div class="t1">{t}</div>'
+    left = "" if i is not None else (
+        f'<div class="art" style="width:40px;height:40px;background:var(--surface-hi);border-radius:20px;color:var(--on-var)">{icon(ic, 20)}</div>')
+    h = 56 if i is not None else 64
+    return (f'<div class="row" style="height:{h}px">{left}<div class="meta"><div class="t1">{t}</div>'
             f'<div class="t2">{s}</div></div></div>')
 
 body = f"""<div class="screen">
@@ -337,6 +328,11 @@ body = f"""<div class="screen">
   </div>
   <div style="height:1px;background:var(--outline);margin:8px 16px"></div>
   <div class="section">Library</div>
+  <div style="display:flex;align-items:center;gap:16px;padding:8px 16px;height:64px">
+    <div class="meta"><div class="t1">Browse by folder</div>
+      <div class="t2">28 folders on this device</div></div>
+    <div style="color:var(--on-var);transform:rotate(180deg)">{icon(I["back"], 20)}</div>
+  </div>
   <div style="padding:4px 16px 0">
     <div class="t1">Ignore tracks shorter than 30 s</div>
     <div class="t2" style="margin-top:2px">Keeps ringtones and voice memos out of the library.</div>
