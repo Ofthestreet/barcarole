@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -61,6 +62,8 @@ class PlayerConnection @Inject constructor(
     }
 
     /** Safe to call repeatedly; the second call is a no-op. */
+    // PlaybackService carries Media3's opt-in marker, so naming it here needs the opt-in too.
+    @androidx.annotation.OptIn(UnstableApi::class)
     fun connect() {
         if (controller != null) return
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
