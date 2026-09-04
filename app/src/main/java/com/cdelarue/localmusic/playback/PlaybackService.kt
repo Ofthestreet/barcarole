@@ -1,25 +1,37 @@
 package com.cdelarue.localmusic.playback
 
 import android.content.Intent
+import android.os.Bundle
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import com.cdelarue.localmusic.data.LibraryRepository
+import com.cdelarue.localmusic.data.albumArtUri
+import com.google.common.collect.ImmutableList
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Owns the one and only ExoPlayer instance. The UI never builds a player of its own; it connects a
  * MediaController to this session, which is what keeps the app, the notification and the lock
  * screen showing the same playback state.
  *
- * A MediaLibraryService rather than a plain MediaSessionService because Android Auto (P4) browses
- * the library through this same session.
+ * A MediaLibraryService rather than a plain MediaSessionService because Android Auto browses the
+ * library through this same session, using the tree in [BrowseTree].
  */
 @UnstableApi
 @AndroidEntryPoint
 class PlaybackService : MediaLibraryService() {
+
+    @Inject lateinit var libraryRepository: LibraryRepository
 
     private var player: ExoPlayer? = null
     private var session: MediaLibrarySession? = null
@@ -62,6 +74,168 @@ class PlaybackService : MediaLibraryService() {
         super.onDestroy()
     }
 
-    /** P4 fills this in with the browse tree; the defaults are enough for phone playback. */
-    private inner class LibraryCallback : MediaLibrarySession.Callback
+    private inner class LibraryCallback : MediaLibrarySession.Callback {
+
+        override fun onGetLibraryRoot(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<MediaItem>> {
+            val root = MediaItem.Builder()
+                .setMediaId(BrowseIds.ROOT)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle("Local music")
+                        .setIsBrowsable(true)
+                        .setIsPlayable(false)
+                        .build(),
+                )
+                .build()
+            return Futures.immediateFuture(LibraryResult.ofItem(root, rootParams()))
+        }
+
+        override fun onGetChildren(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            parentId: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            val children = BrowseTree.childrenOf(libraryRepository.library.value, parentId)
+            val items = children.map { it.toMediaItem() }
+            return Futures.immediateFuture(LibraryResult.ofItemList(ImmutableList.copyOf(items), params))
+        }
+
+        override fun onGetItem(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            mediaId: String,
+        ): ListenableFuture<LibraryResult<MediaItem>> {
+            val library = libraryRepository.library.value
+            val songId = BrowseIds.songIdOf(mediaId)
+            val song = library.songs.firstOrNull { it.id == songId }
+            return if (song != null) {
+                Futures.immediateFuture(LibraryResult.ofItem(song.toMediaItem(), null))
+            } else {
+                val node = BrowseTree.rootChildren().firstOrNull { it.id == mediaId }
+                if (node != null) {
+                    Futures.immediateFuture(LibraryResult.ofItem(node.toMediaItem(), null))
+                } else {
+                    Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+                }
+            }
+        }
+
+        override fun onSearch(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<Void>> {
+            val count = BrowseTree.search(libraryRepository.library.value, query).size
+            session.notifySearchResultChanged(browser, query, count, params)
+            return Futures.immediateFuture(LibraryResult.ofVoid())
+        }
+
+        override fun onGetSearchResult(
+            session: MediaLibrarySession,
+            browser: MediaSession.ControllerInfo,
+            query: String,
+            page: Int,
+            pageSize: Int,
+            params: LibraryParams?,
+        ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+            val items = BrowseTree.search(libraryRepository.library.value, query).map { it.toMediaItem() }
+            return Futures.immediateFuture(LibraryResult.ofItemList(ImmutableList.copyOf(items), params))
+        }
+
+        /**
+         * Items arriving from a browser carry an id but no playable URI. Picking a track queues the
+         * whole parent it came from, positioned on that track.
+         */
+        override fun onSetMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: MutableList<MediaItem>,
+            startIndex: Int,
+            startPositionMs: Long,
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            val library = libraryRepository.library.value
+            val single = mediaItems.singleOrNull()
+            if (single != null && single.localConfiguration == null) {
+                val selection = BrowseTree.queueFor(library, single.mediaId)
+                if (selection != null) {
+                    return Futures.immediateFuture(
+                        MediaSession.MediaItemsWithStartPosition(
+                            selection.songs.toMediaItems(),
+                            selection.startIndex,
+                            C.TIME_UNSET,
+                        ),
+                    )
+                }
+            }
+            return Futures.immediateFuture(
+                MediaSession.MediaItemsWithStartPosition(resolve(mediaItems), startIndex, startPositionMs),
+            )
+        }
+
+        override fun onAddMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: MutableList<MediaItem>,
+        ): ListenableFuture<MutableList<MediaItem>> =
+            Futures.immediateFuture(resolve(mediaItems).toMutableList())
+
+        /** Fills in the URI for items that only carry a media id. */
+        private fun resolve(mediaItems: List<MediaItem>): List<MediaItem> {
+            val songsById = libraryRepository.library.value.songs.associateBy { it.id }
+            return mediaItems.mapNotNull { item ->
+                if (item.localConfiguration != null) {
+                    item
+                } else {
+                    BrowseIds.songIdOf(item.mediaId)?.let { songsById[it] }?.toMediaItem()
+                }
+            }
+        }
+    }
+
+    private fun rootParams(): LibraryParams = LibraryParams.Builder()
+        .setExtras(
+            Bundle().apply {
+                putBoolean(CONTENT_STYLE_SUPPORTED, true)
+                putInt(CONTENT_STYLE_BROWSABLE_HINT, CONTENT_STYLE_LIST)
+                putInt(CONTENT_STYLE_PLAYABLE_HINT, CONTENT_STYLE_LIST)
+            },
+        )
+        .build()
+
+    private fun BrowseNode.toMediaItem(): MediaItem {
+        val extras = Bundle().apply {
+            putInt(
+                CONTENT_STYLE_BROWSABLE_HINT,
+                if (childStyle == BrowseStyle.GRID) CONTENT_STYLE_GRID else CONTENT_STYLE_LIST,
+            )
+            putInt(CONTENT_STYLE_PLAYABLE_HINT, CONTENT_STYLE_LIST)
+        }
+        val metadata = MediaMetadata.Builder()
+            .setTitle(title)
+            .setSubtitle(subtitle.ifEmpty { null })
+            .setArtist(subtitle.ifEmpty { null })
+            .setIsBrowsable(!playable)
+            .setIsPlayable(playable)
+            .setArtworkUri(albumId?.let { albumArtUri(it) })
+            .setExtras(extras)
+            .build()
+        return MediaItem.Builder().setMediaId(id).setMediaMetadata(metadata).build()
+    }
+
+    private companion object {
+        // Android Auto reads these from the browse extras to decide between a list and a grid.
+        const val CONTENT_STYLE_SUPPORTED = "android.media.browse.CONTENT_STYLE_SUPPORTED"
+        const val CONTENT_STYLE_BROWSABLE_HINT = "android.media.browse.CONTENT_STYLE_BROWSABLE_HINT"
+        const val CONTENT_STYLE_PLAYABLE_HINT = "android.media.browse.CONTENT_STYLE_PLAYABLE_HINT"
+        const val CONTENT_STYLE_LIST = 1
+        const val CONTENT_STYLE_GRID = 2
+    }
 }

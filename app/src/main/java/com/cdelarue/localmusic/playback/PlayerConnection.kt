@@ -262,7 +262,8 @@ class PlayerConnection @Inject constructor(
     private fun snapshotOf(player: Player): QueueSnapshot? {
         val count = player.mediaItemCount
         if (count == 0) return null
-        val ids = (0 until count).mapNotNull { player.getMediaItemAt(it).mediaId.toLongOrNull() }
+        // Ids from the Auto browse tree carry their parent, so they are not plain numbers.
+        val ids = (0 until count).mapNotNull { BrowseIds.songIdOf(player.getMediaItemAt(it).mediaId) }
         if (ids.isEmpty()) return null
         return QueueSnapshot(
             songIds = ids,
