@@ -71,7 +71,12 @@ fun LibraryScreen(
     onQueueRemove: (Int) -> Unit,
     onQueueClear: () -> Unit,
     onToggleShuffle: () -> Unit,
-    onOpenPlaylist: (PlaylistId) -> Unit,
+    selectedPlaylist: PlaylistId,
+    playlistSongs: List<Song>,
+    playlistCounts: Map<Long, Int>,
+    onSelectPlaylist: (PlaylistId) -> Unit,
+    onPlayAll: (List<Song>) -> Unit,
+    onShuffleAll: (List<Song>) -> Unit,
 ) {
     var sortMenuOpen by remember { mutableStateOf(false) }
     // Albums are optional, so the tab strip is a filtered list and its index is a position in
@@ -150,7 +155,17 @@ fun LibraryScreen(
                 LibraryTab.SONGS -> SongsTab(state.songsSorted(LibraryTab.SONGS), onSongClick, onSongLongClick)
                 LibraryTab.ALBUMS -> AlbumsTab(state.library.albums, onAlbumClick)
                 LibraryTab.ARTISTS -> ArtistsTab(state.library.artists, onArtistClick)
-                LibraryTab.PLAYLISTS -> PlaylistsTab(playlists = playlists, onOpen = onOpenPlaylist)
+                LibraryTab.PLAYLISTS -> PlaylistsTab(
+                    playlists = playlists,
+                    songs = playlistSongs,
+                    playCounts = playlistCounts,
+                    selected = selectedPlaylist,
+                    onSelect = onSelectPlaylist,
+                    onSongClick = onSongClick,
+                    onSongLongClick = onSongLongClick,
+                    onPlayAll = onPlayAll,
+                    onShuffleAll = onShuffleAll,
+                )
                 LibraryTab.QUEUE -> QueueTab(
                     state = playerState,
                     onPlayIndex = onQueuePlayIndex,

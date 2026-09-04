@@ -64,6 +64,17 @@ class PlaylistRepository @Inject constructor(
         }
     }
 
+    /** Play counts behind a "most played" list, so the screen can show them. Empty elsewhere. */
+    fun playCounts(id: PlaylistId): Map<Long, Int> {
+        val counts = when (id) {
+            PlaylistId.MOST_PLAYED_MONTH -> data.value.countsThisMonth
+            PlaylistId.MOST_PLAYED_YEAR -> data.value.countsThisYear
+            PlaylistId.MOST_PLAYED_ALL -> data.value.countsAllTime
+            else -> return emptyMap()
+        }
+        return counts.associate { it.songId to it.plays }
+    }
+
     fun summaries(): List<PlaylistSummary> = PlaylistId.entries.map { id ->
         PlaylistSummary(id = id, title = Playlists.title(id), count = songsOf(id).size)
     }

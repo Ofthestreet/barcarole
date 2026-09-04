@@ -50,6 +50,7 @@ fun SongRow(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
     trackNumber: Int? = null,
+    trailingText: String? = null,
 ) {
     Row(
         modifier = modifier
@@ -84,7 +85,7 @@ fun SongRow(
             )
         }
         Text(
-            text = formatDuration(song.durationMs),
+            text = trailingText ?: formatDuration(song.durationMs),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -59,6 +59,8 @@ class LibraryViewModel @Inject constructor(
 
     fun songsOf(id: PlaylistId): List<Song> = playlistRepository.songsOf(id)
 
+    fun playCountsOf(id: PlaylistId): Map<Long, Int> = playlistRepository.playCounts(id)
+
     fun toggleFavourite(songId: Long) = playlistRepository.toggleFavourite(songId)
 
     private val _searchQuery = MutableStateFlow("")

@@ -36,7 +36,6 @@ import com.cdelarue.localmusic.data.LibraryIndex
 import com.cdelarue.localmusic.data.LibraryTab
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.data.stats.PlaylistId
-import com.cdelarue.localmusic.data.stats.Playlists
 import com.cdelarue.localmusic.playback.BrowseIds
 import com.cdelarue.localmusic.ui.detail.TrackListScreen
 import com.cdelarue.localmusic.ui.library.LibraryScreen
@@ -69,7 +68,6 @@ private object Routes {
     const val SETTINGS = "settings"
     const val PLAYER = "player"
     const val FOLDERS = "folders"
-    const val PLAYLIST = "playlist/{playlistId}"
     const val ALBUM = "album/{albumId}"
     const val ARTIST = "artist/{artistId}"
     const val FOLDER = "folder?path={folderPath}"
@@ -77,7 +75,6 @@ private object Routes {
     fun album(albumId: Long) = "album/$albumId"
     fun artist(artistId: Long) = "artist/$artistId"
     fun folder(path: String) = "folder?path=${Uri.encode(path)}"
-    fun playlist(id: PlaylistId) = "playlist/${id.name}"
 }
 
 @Composable
@@ -131,6 +128,10 @@ private fun LocalMusicApp(
         val navController = rememberNavController()
         val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
         var selectedTab by rememberSaveable { mutableStateOf(LibraryTab.SONGS) }
+        var selectedPlaylist by rememberSaveable { mutableStateOf(PlaylistId.MOST_PLAYED_MONTH) }
+        // Recomputed when the selection or the underlying data changes, not on every frame.
+        val playlistSongs = remember(selectedPlaylist, playlists) { viewModel.songsOf(selectedPlaylist) }
+        val playlistCounts = remember(selectedPlaylist, playlists) { viewModel.playCountsOf(selectedPlaylist) }
         val playingSongId = playerState.current?.mediaId?.let { BrowseIds.songIdOf(it) }
         val playingIsFavourite = playingSongId != null && playingSongId in favouriteIds
         val onSongClick: (List<Song>, Song) -> Unit = playerViewModel::play
@@ -178,62 +179,12 @@ private fun LocalMusicApp(
                         onQueueRemove = playerViewModel::removeFromQueue,
                         onQueueClear = playerViewModel::clearQueue,
                         onToggleShuffle = playerViewModel::toggleShuffle,
-                        onOpenPlaylist = { navController.navigate(Routes.playlist(it)) },
-                    )
-                }
-
-                composable(Routes.PLAYLIST) { entry ->
-                    val id = entry.arguments?.getString("playlistId")
-                        ?.let { name -> runCatching { PlaylistId.valueOf(name) }.getOrNull() }
-                    val songs = id?.let { viewModel.songsOf(it) }.orEmpty()
-                    TrackListScreen(
-                        title = id?.let { Playlists.title(it) } ?: "Playlist",
-                        subtitle = "",
-                        songs = songs,
-                        onBack = { navController.popBackStackSafely() },
-                        onSongClick = onSongClick,
-                        onSongLongClick = onSongLongClick,
+                        selectedPlaylist = selectedPlaylist,
+                        playlistSongs = playlistSongs,
+                        playlistCounts = playlistCounts,
+                        onSelectPlaylist = { selectedPlaylist = it },
                         onPlayAll = playerViewModel::playAll,
                         onShuffleAll = playerViewModel::shuffleAll,
-                    )
-                }
-
-                composable(Routes.SEARCH) {
-                    SearchScreen(
-                        query = searchQuery,
-                        results = searchResults,
-                        showAlbums = state.settings.showAlbums,
-                        onQueryChange = viewModel::onSearchQueryChange,
-                        onBack = { navController.popBackStackSafely() },
-                        onSongClick = onSongClick,
-                        onSongLongClick = onSongLongClick,
-                        onAlbumClick = { navController.navigate(Routes.album(it.id)) },
-                        onArtistClick = { navController.navigate(Routes.artist(it.id)) },
-                        onFolderClick = { navController.navigate(Routes.folder(it.path)) },
-                    )
-                }
-
-                composable(Routes.SETTINGS) {
-                    SettingsScreen(
-                        settings = state.settings,
-                        supportsDynamicColor = supportsDynamicColor,
-                        songCount = state.library.songs.size,
-                        folderCount = state.library.folders.size,
-                        onBack = { navController.popBackStackSafely() },
-                        onThemeMode = viewModel::setThemeMode,
-                        onDynamicColor = viewModel::setDynamicColor,
-                        onMinTrackSeconds = viewModel::setMinTrackSeconds,
-                        onShowAlbums = viewModel::setShowAlbums,
-                        onRescan = viewModel::rescan,
-                        onBrowseFolders = { navController.navigate(Routes.FOLDERS) },
-                    )
-                }
-
-                composable(Routes.FOLDERS) {
-                    FoldersScreen(
-                        folders = state.library.folders,
-                        onBack = { navController.popBackStackSafely() },
-                        onFolderClick = { navController.navigate(Routes.folder(it.path)) },
                     )
                 }
 
