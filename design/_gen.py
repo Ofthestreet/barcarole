@@ -391,84 +391,49 @@ EXTRA = """
     .dense { display: flex; align-items: center; height: 44px; padding: 0 16px; gap: 12px; }
 """
 
-# Option A - les periodes deviennent des puces : une ligne au lieu de quatre
+# L'ecran retenu : les periodes en puces, la liste choisie juste dessous.
 body = f"""<div class="screen">
 {appbar("Library", ["search", "sort", "refresh", "gear"])}
 {tabs5("Playlists")}
-<div class="list" style="padding:4px 16px">
-  <div class="dense" style="padding:0;justify-content:space-between;height:52px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span style="color:var(--coral)">{icon(I["heart"], 20, "currentColor", "currentColor")}</span>
-      <span style="font-size:16px">Favourites</span>
+<div class="list">
+  <div style="padding:0 16px">
+    <div class="dense" style="padding:0;justify-content:space-between;height:52px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="color:var(--coral)">{icon(I["heart"], 20, "currentColor", "currentColor")}</span>
+        <span style="font-size:16px">Favourites</span>
+      </div>
+      <span class="dur">34</span>
     </div>
-    <span class="dur">34</span>
-  </div>
-  <div style="height:1px;background:var(--outline);margin:4px 0 14px"></div>
+    <div style="height:1px;background:var(--outline);margin:4px 0"></div>
 
-  <div class="grp">Most played</div>
-  <div style="display:flex;gap:8px;margin:10px 0 18px">
-    <div class="chip on">This month</div><div class="chip">This year</div><div class="chip">All time</div>
-  </div>
-
-  <div class="grp">Recently added</div>
-  <div style="display:flex;gap:8px;margin:10px 0 18px;flex-wrap:wrap">
-    <div class="chip">1 week</div><div class="chip">1 month</div>
-    <div class="chip">2 months</div><div class="chip">3 months</div>
-  </div>
-
-  <div style="height:1px;background:var(--outline);margin:0 0 14px"></div>
-  <div class="dense" style="padding:0;justify-content:space-between;height:52px">
-    <span style="font-size:16px">Never played</span><span class="dur">96</span>
-  </div>
-
-  <div class="grp" style="margin-top:22px">Most played · this month</div>
-  {"".join(f'<div class="dense" style="padding:0"><span style="width:20px;color:var(--on-var);font-size:13px">{i+1}</span><div class="meta"><div class="t1" style="font-size:15px">{t}</div></div><span class="dur">{n}</span></div>' for i, (t, n) in enumerate([("Digital Love", "12"), ("Aerodynamic", "9"), ("Dreams", "7")]))}
-</div>
-{mini()}
-</div>"""
-(OUT / "PlaylistsA.dc.html").write_text(page(body, EXTRA), encoding="utf-8")
-
-# Option B - tuiles : le compte devient le repere visuel
-TILES = [("Favourites", "34"), ("Never played", "96"), ("Played this month", "12"),
-         ("Played this year", "87"), ("Played all time", "214"), ("Added this week", "6"),
-         ("Added this month", "23"), ("Added 2 months", "41"), ("Added 3 months", "58")]
-tiles = "".join(
-    f'<div class="tile"><b>{n}</b><span class="t2" style="font-size:12px">{t}</span></div>'
-    for t, n in TILES)
-body = f"""<div class="screen">
-{appbar("Library", ["search", "sort", "refresh", "gear"])}
-{tabs5("Playlists")}
-<div class="list" style="padding:16px">
-  <div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:10px">{tiles}</div>
-</div>
-{mini()}
-</div>"""
-(OUT / "PlaylistsB.dc.html").write_text(page(body, EXTRA), encoding="utf-8")
-
-# Option C - liste dense : tout tient sans defilement, le compte cale a droite
-def dense(label, count, first=False):
-    return (f'<div class="dense" style="justify-content:space-between">'
-            f'<span style="font-size:15px">{label}</span><span class="dur">{count}</span></div>')
-
-body = f"""<div class="screen">
-{appbar("Library", ["search", "sort", "refresh", "gear"])}
-{tabs5("Playlists")}
-<div class="list" style="padding-top:4px">
-  <div class="dense" style="justify-content:space-between;height:48px">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span style="color:var(--coral)">{icon(I["heart"], 20, "currentColor", "currentColor")}</span>
-      <span style="font-size:16px">Favourites</span>
+    <div class="grp" style="margin-top:14px">Most played</div>
+    <div style="display:flex;gap:8px;margin:8px 0 4px">
+      <div class="chip on">This month</div><div class="chip">This year</div><div class="chip">All time</div>
     </div>
-    <span class="dur">34</span>
+
+    <div class="grp" style="margin-top:14px">Recently added</div>
+    <div style="display:flex;gap:8px;margin:8px 0 4px">
+      <div class="chip">1 week</div><div class="chip">1 month</div>
+      <div class="chip">2 months</div><div class="chip">3 months</div>
+    </div>
+
+    <div style="height:1px;background:var(--outline);margin:12px 0 0"></div>
+    <div class="dense" style="padding:0;justify-content:space-between;height:52px">
+      <span style="font-size:16px">Never played</span><span class="dur">96</span>
+    </div>
   </div>
-  <div class="grp" style="padding:14px 16px 2px">Most played</div>
-  {dense("This month", "12")}{dense("This year", "87")}{dense("All time", "214")}
-  <div class="grp" style="padding:14px 16px 2px">Recently added</div>
-  {dense("This week", "6")}{dense("This month", "23")}{dense("Last 2 months", "41")}{dense("Last 3 months", "58")}
-  <div class="grp" style="padding:14px 16px 2px">Not yet played</div>
-  {dense("Never played", "96")}
+
+  <div style="display:flex;align-items:center;padding:14px 4px 4px 16px">
+    <div class="meta">
+      <div style="font-size:15px">Most played this month</div>
+      <div class="t2">12 tracks</div>
+    </div>
+    <div class="iconbtn">{icon(I["play"], 22, "currentColor", "currentColor")}</div>
+    <div class="iconbtn">{icon(I["shuffle"], 22)}</div>
+  </div>
+  {"".join(f'<div class="dense"><span style="width:20px;color:var(--on-var);font-size:13px">{i+1}</span><div class="meta"><div class="t1" style="font-size:15px">{t}</div><div class="t2">{a}</div></div><span class="dur">{n} \u00d7</span></div>' for i, (t, a, n) in enumerate([("Digital Love", "Daft Punk", 12), ("Aerodynamic", "Daft Punk", 9), ("Dreams", "Fleetwood Mac", 7), ("All Blues", "Miles Davis", 5)]))}
 </div>
 {mini()}
 </div>"""
-(OUT / "PlaylistsC.dc.html").write_text(body and page(body, EXTRA), encoding="utf-8")
-print("3 options ecrites")
+(OUT / "Playlists.dc.html").write_text(page(body, EXTRA), encoding="utf-8")
+print("ecran playlists ecrit")
