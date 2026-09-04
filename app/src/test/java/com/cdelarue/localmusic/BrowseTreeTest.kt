@@ -41,12 +41,10 @@ class BrowseTreeTest {
     }
 
     @Test
-    fun `albums and artists ask for a grid, songs and folders for a list`() {
-        val byId = BrowseTree.rootChildren().associateBy { it.id }
-        assertEquals(BrowseStyle.GRID, byId.getValue(BrowseIds.TAB_ALBUMS).childStyle)
-        assertEquals(BrowseStyle.GRID, byId.getValue(BrowseIds.TAB_ARTISTS).childStyle)
-        assertEquals(BrowseStyle.LIST, byId.getValue(BrowseIds.TAB_SONGS).childStyle)
-        assertEquals(BrowseStyle.LIST, byId.getValue(BrowseIds.TAB_FOLDERS).childStyle)
+    fun `every root asks for a list, since there is no artwork to fill a grid`() {
+        BrowseTree.rootChildren().forEach { node ->
+            assertEquals(BrowseStyle.LIST, node.childStyle)
+        }
     }
 
     @Test
