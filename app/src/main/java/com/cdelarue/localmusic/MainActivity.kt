@@ -1,6 +1,7 @@
 package com.cdelarue.localmusic
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -154,21 +156,55 @@ private fun LocalMusicApp(
         }
 
         fun startDeletion(song: Song) {
-            when (val outcome = viewModel.deleteSong(song)) {
-                is DeleteOutcome.Deleted -> {
-                    playerViewModel.removeSongFromQueue(song.id)
-                    viewModel.onSongDeleted(song.id)
-                }
+            viewModel.deleteSong(song) { outcome ->
+                when (outcome) {
+                    is DeleteOutcome.Deleted -> {
+                        playerViewModel.removeSongFromQueue(song.id)
+                        viewModel.onSongDeleted(song.id)
+                    }
 
-                is DeleteOutcome.NeedsConsent -> {
-                    awaitingConsentFor = song.id
-                    deleteConsentLauncher.launch(
-                        IntentSenderRequest.Builder(outcome.intentSender).build(),
-                    )
-                }
+                    is DeleteOutcome.NeedsConsent -> {
+                        awaitingConsentFor = song.id
+                        deleteConsentLauncher.launch(
+                            IntentSenderRequest.Builder(outcome.intentSender).build(),
+                        )
+                    }
 
-                is DeleteOutcome.Failed ->
-                    Toast.makeText(context, outcome.reason, Toast.LENGTH_LONG).show()
+                    is DeleteOutcome.Failed ->
+                        Toast.makeText(context, outcome.reason, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // Before Android 10 the app deletes the file itself, and that needs the write permission.
+        var pendingWriteGrantFor by remember { mutableStateOf<Song?>(null) }
+        val writeAccessLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { granted ->
+            val song = pendingWriteGrantFor
+            pendingWriteGrantFor = null
+            when {
+                song == null -> Unit
+                granted -> startDeletion(song)
+                else -> Toast.makeText(
+                    context,
+                    "Deleting a file needs access to storage.",
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+        }
+
+        fun confirmDeletion(song: Song) {
+            val needsWriteAccess = Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                ) != PackageManager.PERMISSION_GRANTED
+            if (needsWriteAccess) {
+                pendingWriteGrantFor = song
+                writeAccessLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            } else {
+                startDeletion(song)
             }
         }
 
@@ -178,7 +214,7 @@ private fun LocalMusicApp(
                 onDismiss = { pendingDeletion = null },
                 onConfirm = {
                     pendingDeletion = null
-                    startDeletion(song)
+                    confirmDeletion(song)
                 },
             )
         }

@@ -19,6 +19,7 @@ import com.cdelarue.localmusic.data.stats.PlaylistRepository
 import com.cdelarue.localmusic.data.stats.PlaylistSummary
 import com.cdelarue.localmusic.data.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class LibraryUiState(
@@ -66,7 +68,16 @@ class LibraryViewModel @Inject constructor(
 
     fun toggleFavourite(songId: Long) = playlistRepository.toggleFavourite(songId)
 
-    fun deleteSong(song: Song): DeleteOutcome = songDeleter.delete(song)
+    /**
+     * Deleting reaches the media provider over IPC, so it stays off the main thread; the outcome
+     * comes back on the main dispatcher, where the caller may need to launch a consent dialog.
+     */
+    fun deleteSong(song: Song, onOutcome: (DeleteOutcome) -> Unit) {
+        viewModelScope.launch {
+            val outcome = withContext(Dispatchers.IO) { songDeleter.delete(song) }
+            onOutcome(outcome)
+        }
+    }
 
     /** Called once the file is actually gone, whether we deleted it or the system did. */
     fun onSongDeleted(songId: Long) {
