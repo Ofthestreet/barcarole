@@ -237,6 +237,45 @@ private fun LocalMusicApp(
                     )
                 }
 
+                composable(Routes.SEARCH) {
+                    SearchScreen(
+                        query = searchQuery,
+                        results = searchResults,
+                        showAlbums = state.settings.showAlbums,
+                        onQueryChange = viewModel::onSearchQueryChange,
+                        onBack = { navController.popBackStackSafely() },
+                        onSongClick = onSongClick,
+                        onSongLongClick = onSongLongClick,
+                        onAlbumClick = { navController.navigate(Routes.album(it.id)) },
+                        onArtistClick = { navController.navigate(Routes.artist(it.id)) },
+                        onFolderClick = { navController.navigate(Routes.folder(it.path)) },
+                    )
+                }
+
+                composable(Routes.SETTINGS) {
+                    SettingsScreen(
+                        settings = state.settings,
+                        supportsDynamicColor = supportsDynamicColor,
+                        songCount = state.library.songs.size,
+                        folderCount = state.library.folders.size,
+                        onBack = { navController.popBackStackSafely() },
+                        onThemeMode = viewModel::setThemeMode,
+                        onDynamicColor = viewModel::setDynamicColor,
+                        onMinTrackSeconds = viewModel::setMinTrackSeconds,
+                        onShowAlbums = viewModel::setShowAlbums,
+                        onRescan = viewModel::rescan,
+                        onBrowseFolders = { navController.navigate(Routes.FOLDERS) },
+                    )
+                }
+
+                composable(Routes.FOLDERS) {
+                    FoldersScreen(
+                        folders = state.library.folders,
+                        onBack = { navController.popBackStackSafely() },
+                        onFolderClick = { navController.navigate(Routes.folder(it.path)) },
+                    )
+                }
+
                 composable(Routes.PLAYER) {
                     NowPlayingScreen(
                         state = playerState,
