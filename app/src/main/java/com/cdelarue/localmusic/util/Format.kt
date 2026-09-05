@@ -18,3 +18,14 @@ fun formatDuration(durationMs: Long): String {
 
 fun pluralCount(count: Int, singular: String, plural: String = singular + "s"): String =
     "$count ${if (count == 1) singular else plural}"
+
+/** Storage sizes as the file managers show them: one decimal from a megabyte up. */
+fun formatSize(bytes: Long): String {
+    val safe = bytes.coerceAtLeast(0)
+    return when {
+        safe >= 1_000_000_000 -> String.format(Locale.US, "%.1f GB", safe / 1_000_000_000.0)
+        safe >= 1_000_000 -> String.format(Locale.US, "%.1f MB", safe / 1_000_000.0)
+        safe >= 1_000 -> String.format(Locale.US, "%d kB", safe / 1_000)
+        else -> "$safe B"
+    }
+}

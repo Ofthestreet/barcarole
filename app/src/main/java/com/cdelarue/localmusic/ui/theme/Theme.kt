@@ -8,8 +8,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import com.cdelarue.localmusic.data.TextSize
 import com.cdelarue.localmusic.data.ThemeMode
 
 // Sampled from the app icon: navy ground, the note's turquoise as the accent, the sail's coral
@@ -60,6 +64,7 @@ val supportsDynamicColor: Boolean
 fun LocalMusicTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     dynamicColor: Boolean = false,
+    textSize: TextSize = TextSize.NORMAL,
     content: @Composable () -> Unit,
 ) {
     val darkTheme = when (themeMode) {
@@ -74,5 +79,11 @@ fun LocalMusicTheme(
         darkTheme -> DarkScheme
         else -> LightScheme
     }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    // Scaling the density's font scale shrinks every sp in the app at once, the system's own
+    // accessibility setting included, while dp sizes stay where the design put them.
+    val density = LocalDensity.current
+    val scaled = Density(density.density, density.fontScale * textSize.scale)
+    CompositionLocalProvider(LocalDensity provides scaled) {
+        MaterialTheme(colorScheme = colorScheme, content = content)
+    }
 }

@@ -17,6 +17,7 @@ import com.cdelarue.localmusic.data.SortOrder
 import com.cdelarue.localmusic.data.stats.PlaylistId
 import com.cdelarue.localmusic.data.stats.PlaylistRepository
 import com.cdelarue.localmusic.data.stats.PlaylistSummary
+import com.cdelarue.localmusic.data.TextSize
 import com.cdelarue.localmusic.data.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -72,17 +73,21 @@ class LibraryViewModel @Inject constructor(
      * Deleting reaches the media provider over IPC, so it stays off the main thread; the outcome
      * comes back on the main dispatcher, where the caller may need to launch a consent dialog.
      */
-    fun deleteSong(song: Song, onOutcome: (DeleteOutcome) -> Unit) {
+    fun deleteSongs(songs: List<Song>, onOutcome: (DeleteOutcome) -> Unit) {
         viewModelScope.launch {
-            val outcome = withContext(Dispatchers.IO) { songDeleter.delete(song) }
+            val outcome = withContext(Dispatchers.IO) { songDeleter.delete(songs) }
             onOutcome(outcome)
         }
     }
 
-    /** Called once the file is actually gone, whether we deleted it or the system did. */
-    fun onSongDeleted(songId: Long) {
+    /**
+     * Called once the files are actually gone, whether we deleted them or the system did. The
+     * library is rescanned once for the whole batch, not once per file.
+     */
+    fun onSongsDeleted(songIds: List<Long>) {
+        if (songIds.isEmpty()) return
         viewModelScope.launch {
-            playlistRepository.forget(songId)
+            songIds.forEach { playlistRepository.forget(it) }
             repository.refresh()
         }
     }
@@ -140,6 +145,10 @@ class LibraryViewModel @Inject constructor(
 
     fun setShowAlbums(enabled: Boolean) {
         viewModelScope.launch { settingsStore.setShowAlbums(enabled) }
+    }
+
+    fun setTextSize(size: TextSize) {
+        viewModelScope.launch { settingsStore.setTextSize(size) }
     }
 
     fun setMinTrackSeconds(seconds: Int) {

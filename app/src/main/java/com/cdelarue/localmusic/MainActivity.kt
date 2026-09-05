@@ -39,6 +39,7 @@ import androidx.navigation.navArgument
 import com.cdelarue.localmusic.data.LibraryIndex
 import com.cdelarue.localmusic.data.LibraryTab
 import com.cdelarue.localmusic.data.DeleteOutcome
+import com.cdelarue.localmusic.data.Duplicates
 import com.cdelarue.localmusic.data.Song
 import com.cdelarue.localmusic.data.stats.PlaylistId
 import com.cdelarue.localmusic.playback.BrowseIds
@@ -53,6 +54,7 @@ import com.cdelarue.localmusic.ui.player.PlayerViewModel
 import com.cdelarue.localmusic.ui.components.DeleteSongDialog
 import com.cdelarue.localmusic.ui.components.SongActionsSheet
 import com.cdelarue.localmusic.ui.search.SearchScreen
+import com.cdelarue.localmusic.ui.settings.DuplicatesScreen
 import com.cdelarue.localmusic.ui.settings.SettingsScreen
 import com.cdelarue.localmusic.ui.theme.LocalMusicTheme
 import com.cdelarue.localmusic.ui.theme.supportsDynamicColor
@@ -74,6 +76,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val PLAYER = "player"
     const val FOLDERS = "folders"
+    const val DUPLICATES = "duplicates"
     const val ALBUM = "album/{albumId}"
     const val ARTIST = "artist/{artistId}"
     const val FOLDER = "folder?path={folderPath}"
@@ -122,7 +125,11 @@ private fun LocalMusicApp(
         }
     }
 
-    LocalMusicTheme(themeMode = state.settings.themeMode, dynamicColor = state.settings.dynamicColor) {
+    LocalMusicTheme(
+        themeMode = state.settings.themeMode,
+        dynamicColor = state.settings.dynamicColor,
+        textSize = state.settings.textSize,
+    ) {
         if (!hasPermission) {
             PermissionScreen(
                 permanentlyDenied = permanentlyDenied,
@@ -138,33 +145,48 @@ private fun LocalMusicApp(
         // Recomputed when the selection or the underlying data changes, not on every frame.
         val playlistSongs = remember(selectedPlaylist, playlists) { viewModel.songsOf(selectedPlaylist) }
         val playlistCounts = remember(selectedPlaylist, playlists) { viewModel.playCountsOf(selectedPlaylist) }
+        val duplicates = remember(state.library.songs) { Duplicates.find(state.library.songs) }
         val playingSongId = playerState.current?.mediaId?.let { BrowseIds.songIdOf(it) }
         val playingSong = playingSongId?.let { id -> state.library.songs.firstOrNull { it.id == id } }
         var pendingDeletion by remember { mutableStateOf<Song?>(null) }
-        var awaitingConsentFor by remember { mutableStateOf<Long?>(null) }
+        // Cleaned up once the system reports the batch deleted; empty on the Android 10 path,
+        // where consent covers one file at a time and the rest is retried instead.
+        var consentBatch by remember { mutableStateOf(emptyList<Long>()) }
+        var consentRetry by remember { mutableStateOf(emptyList<Song>()) }
+        var resumeDeletion by remember { mutableStateOf(emptyList<Song>()) }
+
+        fun finishDeletion(songIds: List<Long>) {
+            songIds.forEach { playerViewModel.removeSongFromQueue(it) }
+            viewModel.onSongsDeleted(songIds)
+        }
 
         // Android 11+ asks for its own confirmation and reports back here.
         val deleteConsentLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.StartIntentSenderForResult(),
         ) { result ->
-            val songId = awaitingConsentFor
-            awaitingConsentFor = null
-            if (result.resultCode == android.app.Activity.RESULT_OK && songId != null) {
-                playerViewModel.removeSongFromQueue(songId)
-                viewModel.onSongDeleted(songId)
+            val batch = consentBatch
+            val retry = consentRetry
+            consentBatch = emptyList()
+            consentRetry = emptyList()
+            if (result.resultCode == android.app.Activity.RESULT_OK) {
+                if (batch.isNotEmpty()) finishDeletion(batch)
+                if (retry.isNotEmpty()) resumeDeletion = retry
             }
         }
 
-        fun startDeletion(song: Song) {
-            viewModel.deleteSong(song) { outcome ->
+        fun startDeletion(songs: List<Song>) {
+            if (songs.isEmpty()) return
+            viewModel.deleteSongs(songs) { outcome ->
                 when (outcome) {
-                    is DeleteOutcome.Deleted -> {
-                        playerViewModel.removeSongFromQueue(song.id)
-                        viewModel.onSongDeleted(song.id)
-                    }
+                    is DeleteOutcome.Deleted -> finishDeletion(songs.map { it.id })
 
                     is DeleteOutcome.NeedsConsent -> {
-                        awaitingConsentFor = song.id
+                        // Whatever the batch got through before it stopped is already gone.
+                        val stillPending = outcome.remaining.map { it.id }.toSet()
+                        val done = songs.map { it.id }.filterNot { it in stillPending }
+                        consentBatch = if (outcome.remaining.isEmpty()) songs.map { it.id } else emptyList()
+                        consentRetry = outcome.remaining
+                        if (outcome.remaining.isNotEmpty() && done.isNotEmpty()) finishDeletion(done)
                         deleteConsentLauncher.launch(
                             IntentSenderRequest.Builder(outcome.intentSender).build(),
                         )
@@ -177,15 +199,15 @@ private fun LocalMusicApp(
         }
 
         // Before Android 10 the app deletes the file itself, and that needs the write permission.
-        var pendingWriteGrantFor by remember { mutableStateOf<Song?>(null) }
+        var pendingWriteGrantFor by remember { mutableStateOf(emptyList<Song>()) }
         val writeAccessLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestPermission(),
         ) { granted ->
-            val song = pendingWriteGrantFor
-            pendingWriteGrantFor = null
+            val songs = pendingWriteGrantFor
+            pendingWriteGrantFor = emptyList()
             when {
-                song == null -> Unit
-                granted -> startDeletion(song)
+                songs.isEmpty() -> Unit
+                granted -> startDeletion(songs)
                 else -> Toast.makeText(
                     context,
                     "Deleting a file needs access to storage.",
@@ -194,17 +216,27 @@ private fun LocalMusicApp(
             }
         }
 
-        fun confirmDeletion(song: Song) {
+        fun confirmDeletion(songs: List<Song>) {
             val needsWriteAccess = Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
                 ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 ) != PackageManager.PERMISSION_GRANTED
             if (needsWriteAccess) {
-                pendingWriteGrantFor = song
+                pendingWriteGrantFor = songs
                 writeAccessLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             } else {
-                startDeletion(song)
+                startDeletion(songs)
+            }
+        }
+
+        // The Android 10 path comes back one file at a time; picking the rest up here keeps the
+        // launcher and the delete call from having to reference each other.
+        LaunchedEffect(resumeDeletion) {
+            val remaining = resumeDeletion
+            if (remaining.isNotEmpty()) {
+                resumeDeletion = emptyList()
+                startDeletion(remaining)
             }
         }
 
@@ -214,7 +246,7 @@ private fun LocalMusicApp(
                 onDismiss = { pendingDeletion = null },
                 onConfirm = {
                     pendingDeletion = null
-                    confirmDeletion(song)
+                    confirmDeletion(listOf(song))
                 },
             )
         }
@@ -299,8 +331,11 @@ private fun LocalMusicApp(
                         onDynamicColor = viewModel::setDynamicColor,
                         onMinTrackSeconds = viewModel::setMinTrackSeconds,
                         onShowAlbums = viewModel::setShowAlbums,
+                        onTextSize = viewModel::setTextSize,
                         onRescan = viewModel::rescan,
                         onBrowseFolders = { navController.navigate(Routes.FOLDERS) },
+                        duplicateCount = Duplicates.removable(duplicates).size,
+                        onBrowseDuplicates = { navController.navigate(Routes.DUPLICATES) },
                     )
                 }
 
@@ -309,6 +344,14 @@ private fun LocalMusicApp(
                         folders = state.library.folders,
                         onBack = { navController.popBackStackSafely() },
                         onFolderClick = { navController.navigate(Routes.folder(it.path)) },
+                    )
+                }
+
+                composable(Routes.DUPLICATES) {
+                    DuplicatesScreen(
+                        groups = duplicates,
+                        onBack = { navController.popBackStackSafely() },
+                        onDelete = { songs -> confirmDeletion(songs) },
                     )
                 }
 

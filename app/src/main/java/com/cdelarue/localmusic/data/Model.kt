@@ -13,6 +13,7 @@ data class Song(
     val year: Int,
     val dateAddedSeconds: Long,
     val path: String,
+    val sizeBytes: Long = 0,
 ) {
     val folderPath: String
         get() = path.substringBeforeLast('/', missingDelimiterValue = "")

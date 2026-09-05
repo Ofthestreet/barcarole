@@ -1,6 +1,7 @@
 package com.cdelarue.localmusic.ui.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.cdelarue.localmusic.BuildConfig
 import com.cdelarue.localmusic.data.Settings
+import com.cdelarue.localmusic.data.TextSize
 import com.cdelarue.localmusic.data.ThemeMode
 import com.cdelarue.localmusic.util.pluralCount
 
@@ -49,8 +52,11 @@ fun SettingsScreen(
     onDynamicColor: (Boolean) -> Unit,
     onMinTrackSeconds: (Int) -> Unit,
     onShowAlbums: (Boolean) -> Unit,
+    onTextSize: (TextSize) -> Unit,
     onRescan: () -> Unit,
     onBrowseFolders: () -> Unit,
+    duplicateCount: Int,
+    onBrowseDuplicates: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -93,6 +99,30 @@ fun SettingsScreen(
                 }
             }
 
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Text("Text size", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "Below 100% the text shrinks, so more rows fit on a small screen.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TextSize.entries.forEach { size ->
+                    FilterChip(
+                        selected = settings.textSize == size,
+                        onClick = { onTextSize(size) },
+                        label = { Text(size.label) },
+                    )
+                }
+            }
+
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionTitle("Library")
 
@@ -103,28 +133,21 @@ fun SettingsScreen(
                 Switch(checked = settings.showAlbums, onCheckedChange = onShowAlbums)
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = onBrowseFolders)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("Browse by folder", style = MaterialTheme.typography.bodyLarge)
-                    Text(
-                        text = pluralCount(folderCount, "folder") + " on this device",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            LinkRow(
+                title = "Browse by folder",
+                subtitle = pluralCount(folderCount, "folder") + " on this device",
+                onClick = onBrowseFolders,
+            )
+
+            LinkRow(
+                title = "Remove duplicates",
+                subtitle = if (duplicateCount == 0) {
+                    "Every track appears once"
+                } else {
+                    pluralCount(duplicateCount, "extra copy", "extra copies") + " to review"
+                },
+                onClick = onBrowseDuplicates,
+            )
 
             var sliderValue by remember(settings.minTrackSeconds) {
                 mutableFloatStateOf(settings.minTrackSeconds.toFloat())
@@ -166,6 +189,32 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun LinkRow(title: String, subtitle: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

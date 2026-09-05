@@ -15,11 +15,23 @@ import javax.inject.Singleton
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/**
+ * A multiplier applied on top of the system's own font scale, for screens where the default type
+ * is too large to fit a useful number of rows.
+ */
+enum class TextSize(val scale: Float, val label: String) {
+    NORMAL(1f, "100%"),
+    SMALL(0.9f, "90%"),
+    SMALLER(0.8f, "80%"),
+    SMALLEST(0.7f, "70%"),
+}
+
 data class Settings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = false,
     val minTrackSeconds: Int = 30,
     val showAlbums: Boolean = false,
+    val textSize: TextSize = TextSize.NORMAL,
     val sortOrders: Map<LibraryTab, SortOrder> = emptyMap(),
 ) {
     fun sortFor(tab: LibraryTab): SortOrder = sortOrders[tab] ?: SortOrder()
@@ -36,6 +48,7 @@ class SettingsStore @Inject constructor(private val context: Context) {
             dynamicColor = prefs[KeyDynamicColor] ?: false,
             minTrackSeconds = prefs[KeyMinTrackSeconds] ?: 30,
             showAlbums = prefs[KeyShowAlbums] ?: false,
+            textSize = prefs[KeyTextSize]?.let { runCatching { TextSize.valueOf(it) }.getOrNull() } ?: TextSize.NORMAL,
             sortOrders = LibraryTab.entries.associateWith { tab ->
                 val key = prefs[sortKeyFor(tab)]?.let { runCatching { SongSort.valueOf(it) }.getOrNull() } ?: SongSort.TITLE
                 SortOrder(key = key, ascending = prefs[sortAscendingFor(tab)] ?: true)
@@ -51,6 +64,8 @@ class SettingsStore @Inject constructor(private val context: Context) {
 
     suspend fun setShowAlbums(enabled: Boolean) = context.dataStore.edit { it[KeyShowAlbums] = enabled }
 
+    suspend fun setTextSize(size: TextSize) = context.dataStore.edit { it[KeyTextSize] = size.name }
+
     suspend fun setSortOrder(tab: LibraryTab, order: SortOrder) = context.dataStore.edit {
         it[sortKeyFor(tab)] = order.key.name
         it[sortAscendingFor(tab)] = order.ascending
@@ -61,6 +76,7 @@ class SettingsStore @Inject constructor(private val context: Context) {
         val KeyDynamicColor = booleanPreferencesKey("dynamic_color")
         val KeyMinTrackSeconds = intPreferencesKey("min_track_seconds")
         val KeyShowAlbums = booleanPreferencesKey("show_albums")
+        val KeyTextSize = stringPreferencesKey("text_size")
         fun sortKeyFor(tab: LibraryTab) = stringPreferencesKey("sort_key_${tab.name}")
         fun sortAscendingFor(tab: LibraryTab) = booleanPreferencesKey("sort_asc_${tab.name}")
     }
