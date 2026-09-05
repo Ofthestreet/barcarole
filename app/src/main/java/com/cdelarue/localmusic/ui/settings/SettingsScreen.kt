@@ -178,7 +178,7 @@ fun SettingsScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             SectionTitle("About")
             Text(
-                text = "Local music ${BuildConfig.VERSION_NAME}",
+                text = "Barcarole ${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
             )

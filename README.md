@@ -1,4 +1,4 @@
-# Local music
+# Barcarole
 
 An offline music player for Android that plays audio files already stored on the phone.
 No network, no accounts, no streaming.
@@ -15,7 +15,7 @@ There is no Android SDK on the development machine, so CI is the compiler. Every
 uploads the APK as a workflow artifact.
 
 To install on a phone: open the latest run under Actions, download the
-`local-music-debug-apk` artifact, unzip it, and install the APK. "Install unknown apps"
+`barcarole-debug-apk` artifact, unzip it, and install the APK. "Install unknown apps"
 must be allowed for whichever app opens it.
 
 Tagging a commit `v0.1.0` publishes the APK to a GitHub Release instead, which is a single

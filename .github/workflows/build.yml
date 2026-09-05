@@ -27,7 +27,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: local-music-debug-apk
+          name: barcarole-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 

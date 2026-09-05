@@ -152,7 +152,7 @@ class PlaybackService : MediaLibraryService() {
                 .setMediaId(BrowseIds.ROOT)
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setTitle("Local music")
+                        .setTitle("Barcarole")
                         .setIsBrowsable(true)
                         .setIsPlayable(false)
                         .build(),

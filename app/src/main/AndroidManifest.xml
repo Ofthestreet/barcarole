@@ -24,7 +24,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LocalMusic">
+        android:theme="@style/Theme.Barcarole">
 
         <!-- Declares this as a media app to Android Auto. -->
         <meta-data
@@ -35,7 +35,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.LocalMusic">
+            android:theme="@style/Theme.Barcarole">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
