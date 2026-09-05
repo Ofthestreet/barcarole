@@ -7,6 +7,7 @@ import android.content.IntentSender
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import androidx.annotation.RequiresApi
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,14 +51,18 @@ class SongDeleter @Inject constructor(private val context: Context) {
         songs.forEachIndexed { index, song ->
             try {
                 deleted += context.contentResolver.delete(uriOf(song), null, null)
-            } catch (security: RecoverableSecurityException) {
-                // Android 10 only: the user vouches for this one file, then we pick up the rest.
-                return DeleteOutcome.NeedsConsent(
-                    intentSender = security.userAction.actionIntent.intentSender,
-                    remaining = songs.drop(index),
-                )
             } catch (security: SecurityException) {
-                return failed(deleted, songs.size, "This app is not allowed to delete that file.")
+                // Android 10 only: the user vouches for this one file, then we pick up the rest.
+                val consent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    consentFrom(security)
+                } else {
+                    null
+                }
+                return if (consent != null) {
+                    DeleteOutcome.NeedsConsent(intentSender = consent, remaining = songs.drop(index))
+                } else {
+                    failed(deleted, songs.size, "This app is not allowed to delete that file.")
+                }
             }
         }
         return if (deleted > 0) {
@@ -66,6 +71,11 @@ class SongDeleter @Inject constructor(private val context: Context) {
             DeleteOutcome.Failed("The file could not be deleted.")
         }
     }
+
+    /** Android 10 wraps the missing grant in an exception that carries the consent intent. */
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun consentFrom(security: SecurityException): IntentSender? =
+        (security as? RecoverableSecurityException)?.userAction?.actionIntent?.intentSender
 
     private fun failed(deleted: Int, total: Int, reason: String): DeleteOutcome =
         if (deleted == 0) {
