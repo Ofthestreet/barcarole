@@ -1,5 +1,7 @@
 # Barcarole
 
+*[English version](README.en.md)*
+
 Un lecteur de musique pour Android qui joue les fichiers déjà présents sur le téléphone ou
 sur sa carte SD. Rien d'autre.
 
@@ -29,25 +31,79 @@ Le nom vient de la barcarolle, la chanson des gondoliers vénitiens : une musiqu
 
 ## Installer
 
-L'application n'est pas sur le Play Store. Chaque version est construite automatiquement et
-déposée en ligne.
-
-**Le plus simple — la dernière version publiée :**
+L'application n'est pas sur le Play Store. Elle est distribuée directement, ce qu'Android
+appelle une installation « de source inconnue » — avec les avertissements qui vont avec,
+expliqués juste après.
 
 > **[Télécharger la dernière version](https://github.com/Ofthestreet/local-music-player/releases/latest)**
 
-Ce lien s'ouvre directement depuis le téléphone : il mène à la page de la version la plus
-récente, où l'APK est attaché sous un nom du genre `barcarole-v0.1.0.apk`. Un appui dessus le
-télécharge, un second l'installe. Android demandera l'autorisation d'installer des
-applications depuis cette source — il faut l'accorder à l'application qui ouvre le fichier
-(navigateur ou gestionnaire de fichiers).
+**Pas à pas, depuis le téléphone :**
 
-**Pour prendre une version en cours de développement**, avant qu'elle soit publiée : ouvrir
-la page **Actions** du dépôt, choisir la dernière exécution réussie (coche verte), télécharger
-l'archive **`barcarole-debug-apk`** et la décompresser pour en sortir l'APK.
+1. Ouvrir le lien ci-dessus et toucher le fichier `barcarole-v0.1.0.apk` attaché à la
+   version. Le navigateur le télécharge.
+2. Ouvrir le fichier téléchargé : depuis la notification de téléchargement, ou dans le
+   dossier **Téléchargements** du gestionnaire de fichiers.
+3. Android refuse une première fois : « Pour votre sécurité, votre téléphone n'est pas
+   autorisé à installer des applications inconnues provenant de cette source. » Toucher
+   **Paramètres**, activer **Autoriser depuis cette source**, puis revenir en arrière. Cette
+   autorisation se donne une seule fois, mais par application source : le navigateur et le
+   gestionnaire de fichiers comptent pour deux.
+4. L'écran d'installation apparaît. Play Protect peut proposer d'analyser l'application, ou
+   signaler un développeur inconnu — voir la section suivante. Continuer.
+5. **Installer**, puis ouvrir.
 
-Une mise à jour s'installe par-dessus la précédente et conserve les réglages, les favoris et
-l'historique d'écoutes.
+**Pour prendre une version de développement** avant sa publication : onglet **Actions** du
+dépôt, dernière exécution réussie (coche verte), télécharger l'archive
+**`barcarole-debug-apk`** et la décompresser pour en sortir l'APK.
+
+### Mettre à jour : pour l'instant, il faut désinstaller d'abord
+
+Chaque build est signé avec une clé de débogage **régénérée à chaque exécution** de la chaîne
+de construction. Android refuse d'installer par-dessus une application signée par une autre
+clé : le message est « L'application n'a pas été installée ».
+
+Concrètement, aujourd'hui : pour passer à une nouvelle version, il faut **désinstaller
+l'ancienne**, et la désinstallation emporte les réglages, les favoris et l'historique
+d'écoutes. Ce n'est pas une fatalité — la section suivante explique comment y remédier.
+
+## « Application non authentifiée » : ce que ça veut dire
+
+Toute application Android est signée ; la question est de savoir **par qui**. Barcarole est
+signée par une clé de débogage anonyme, fabriquée automatiquement par l'outil de
+construction. Elle n'atteste de rien : ni identité, ni éditeur, ni contrôle.
+
+Trois avertissements différents peuvent apparaître, et ils ne disent pas la même chose :
+
+| Ce que dit le téléphone | Ce que ça signifie | Peut-on l'enlever ? |
+|---|---|---|
+| « Applications inconnues provenant de cette source » | Le fichier ne vient pas d'une boutique | Non — c'est le principe même de l'installation directe. L'autorisation se donne une fois par source. |
+| Play Protect : « analyser l'application », « développeur inconnu » | Google ne reconnaît pas la signature | On peut passer outre. Désactiver Play Protect est possible, mais déconseillé. |
+| « L'application n'a pas été installée » lors d'une mise à jour | La signature diffère de celle déjà installée | Oui, avec une clé de signature stable |
+
+**Ce qu'une clé stable règle.** Générer une clé une fois, la garder, et signer toutes les
+versions avec elle : les mises à jour s'installent alors par-dessus la précédente sans rien
+perdre, et l'application a une identité constante et vérifiable. C'est l'étape qui compte, et
+elle ne dépend d'aucune boutique.
+
+**Ce qu'une clé stable ne règle pas.** L'avertissement « source inconnue » reste : il ne parle
+pas de la clé, il parle du canal. Tant que le fichier arrive par un navigateur, Android
+préviendra.
+
+**Le seul moyen de faire disparaître complètement l'avertissement** est de passer par une
+boutique reconnue :
+
+- **Google Play** — compte développeur à 25 $ une seule fois, examen de l'application, et
+  possibilité de rester en diffusion privée (test interne ou fermé) sans publier au monde
+  entier ;
+- **F-Droid** — pas de compte payant, mais ses propres exigences (sources ouvertes,
+  construction reproductible) et un délai.
+
+**À surveiller.** Google a annoncé une obligation de **vérification de l'identité du
+développeur** pour les applications installées hors boutique sur les appareils Android
+certifiés, déployée par pays à partir de 2026, avec un régime allégé annoncé pour les
+développeurs amateurs. Les modalités ont bougé plusieurs fois depuis l'annonce : si cette
+application doit survivre à ce changement, il faudra vérifier les règles en vigueur le moment
+venu.
 
 ## Au premier lancement
 
