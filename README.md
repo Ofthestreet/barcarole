@@ -30,13 +30,21 @@ Le nom vient de la barcarolle, la chanson des gondoliers vénitiens : une musiqu
 ## Installer
 
 L'application n'est pas sur le Play Store. Chaque version est construite automatiquement et
-déposée en ligne :
+déposée en ligne.
 
-1. Ouvrir la page **Actions** du dépôt, choisir la dernière exécution réussie (coche verte).
-2. Télécharger l'archive **`barcarole-debug-apk`** et la décompresser.
-3. Ouvrir l'APK sur le téléphone. Android demandera l'autorisation d'installer des
-   applications depuis cette source — il faut l'accorder à l'application qui ouvre le fichier
-   (navigateur ou gestionnaire de fichiers).
+**Le plus simple — la dernière version publiée :**
+
+> **[Télécharger la dernière version](https://github.com/Ofthestreet/local-music-player/releases/latest)**
+
+Ce lien s'ouvre directement depuis le téléphone : il mène à la page de la version la plus
+récente, où l'APK est attaché sous un nom du genre `barcarole-v0.1.0.apk`. Un appui dessus le
+télécharge, un second l'installe. Android demandera l'autorisation d'installer des
+applications depuis cette source — il faut l'accorder à l'application qui ouvre le fichier
+(navigateur ou gestionnaire de fichiers).
+
+**Pour prendre une version en cours de développement**, avant qu'elle soit publiée : ouvrir
+la page **Actions** du dépôt, choisir la dernière exécution réussie (coche verte), télécharger
+l'archive **`barcarole-debug-apk`** et la décompresser pour en sortir l'APK.
 
 Une mise à jour s'installe par-dessus la précédente et conserve les réglages, les favoris et
 l'historique d'écoutes.
