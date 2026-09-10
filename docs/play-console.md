@@ -158,6 +158,47 @@ par le magasin.
 
 ---
 
+## L'ordre dans la console
+
+La console ne guide pas vraiment : elle présente une liste de tâches sans dire laquelle bloque
+laquelle. Voici l'ordre qui fonctionne.
+
+**1. Le compte.** <https://play.google.com/console> → créer un compte **développeur
+personnel** → payer les 25 $ → vérification d'identité (pièce d'identité et adresse). Rien
+n'est publiable tant qu'elle n'est pas passée, et c'est l'étape la plus lente : plusieurs
+jours.
+
+**2. Créer l'application.** Nom `Barcarole`, langue par défaut française, type *Application*,
+*Gratuite*. Attention : le caractère gratuit ne peut plus être changé en payant ensuite.
+
+**3. Le contenu de l'application** (*Règles* → *Contenu de l'application*). C'est la partie la
+plus longue, et chaque entrée est bloquante. Tout est déjà répondu plus haut dans cette page :
+accès à l'application, publicités, classification du contenu, public visé, sécurité des
+données, application gouvernementale, fonctionnalités financières, santé, application
+d'actualités, et la déclaration du **service au premier plan**. Sans oublier l'URL de la
+politique de confidentialité.
+
+**4. La fiche du magasin** (*Développer* → *Présence sur le magasin* → *Fiche principale*).
+Descriptions, icône, bannière, captures d'écran, catégorie *Musique et audio*, adresse de
+contact.
+
+**5. La piste de test interne** (*Tester et publier* → *Tests* → *Test interne*). Onglet
+*Testeurs* : créer une liste d'adresses e-mail et y mettre la tienne — celle du compte Google
+du téléphone, pas une autre.
+
+**6. Le premier envoi.** *Créer une version* → déposer `barcarole-v0.2.0.aab`. La console
+proposera la **signature d'application Play** : accepter que Google génère et conserve la clé
+définitive. Ta clé d'upload est alors enregistrée comme celle qui prouve que l'envoi vient de
+toi. Notes de version, puis *Vérifier* et *Démarrer le déploiement*.
+
+**7. L'installation.** L'onglet *Testeurs* affiche un **lien d'inscription**. L'ouvrir sur le
+téléphone avec le bon compte Google, accepter de devenir testeur, puis installer depuis le
+Play Store.
+
+**Avant cette dernière étape : désinstalle la Barcarole installée à la main.** Google resigne
+le bundle avec sa propre clé, donc la version du magasin n'a pas la même signature que la
+tienne et refusera de s'installer par-dessus. C'est la dernière fois.
+
 ## Ce qui reste à ta charge
 
 - [ ] **Les captures d'écran.** Google veut de vraies captures de l'application, pas des
