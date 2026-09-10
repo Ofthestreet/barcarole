@@ -109,6 +109,7 @@ I = {
   "trash": '<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"></path>',
   "plus": '<path d="M12 5v14M5 12h14"></path>',
   "heart": '<path d="M12 20s-7-4.4-7-9.2A4 4 0 0 1 12 8a4 4 0 0 1 7 2.8C19 15.6 12 20 12 20z"></path>',
+  "star": '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"></path>',
   "bookmarks": '<path d="M7 4h8a1 1 0 0 1 1 1v14l-5-3.2L6 19V5a1 1 0 0 1 1-1z"></path><path d="M10 4V3a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v13"></path>',
 }
 
@@ -134,7 +135,7 @@ TAB_ICON = {
     "Albums": "disc",
     "Artists": "person",
     "Queue": "queue",
-    "Playlists": "bookmarks",
+    "Playlists": "star",
 }
 
 
