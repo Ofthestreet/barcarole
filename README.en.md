@@ -33,7 +33,7 @@ sung on the water.
 The app is not on the Play Store. It is distributed directly — what Android calls installing
 from an "unknown source", with the warnings that come with it, explained right after.
 
-> **[Download the latest release](https://github.com/Ofthestreet/local-music-player/releases/latest)**
+> **[Download the latest release](https://github.com/Ofthestreet/barcarole/releases/latest)**
 
 **Step by step, from the phone:**
 

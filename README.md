@@ -35,7 +35,7 @@ L'application n'est pas sur le Play Store. Elle est distribuée directement, ce 
 appelle une installation « de source inconnue » — avec les avertissements qui vont avec,
 expliqués juste après.
 
-> **[Télécharger la dernière version](https://github.com/Ofthestreet/local-music-player/releases/latest)**
+> **[Télécharger la dernière version](https://github.com/Ofthestreet/barcarole/releases/latest)**
 
 **Pas à pas, depuis le téléphone :**
 
