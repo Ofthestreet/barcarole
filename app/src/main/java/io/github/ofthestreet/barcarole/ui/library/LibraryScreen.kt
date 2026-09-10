@@ -1,20 +1,30 @@
 package io.github.ofthestreet.barcarole.ui.library
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.SortByAlpha
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,8 +41,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import io.github.ofthestreet.barcarole.R
 import io.github.ofthestreet.barcarole.data.Album
 import io.github.ofthestreet.barcarole.data.Artist
 import io.github.ofthestreet.barcarole.data.LibraryIndex
@@ -90,7 +105,18 @@ fun LibraryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Library") },
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // The launcher artwork fills its own square, so it only needs rounding.
+                        Image(
+                            painter = painterResource(R.drawable.ic_launcher_illustration),
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp).clip(RoundedCornerShape(7.dp)),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text("Barcarole")
+                    }
+                },
                 actions = {
                     IconButton(onClick = onSearchClick) {
                         Icon(Icons.Rounded.Search, contentDescription = "Search")
@@ -138,7 +164,8 @@ fun LibraryScreen(
                     Tab(
                         selected = tab == effectiveTab,
                         onClick = { onSelectTab(tab) },
-                        text = { Text(tab.label()) },
+                        // The label survives as the description: a screen reader still says it.
+                        icon = { Icon(tab.icon(), contentDescription = tab.label()) },
                     )
                 }
             }
@@ -237,6 +264,18 @@ private fun ArtistsTab(artists: List<Artist>, onArtistClick: (Artist) -> Unit) {
             listState = listState,
         )
     }
+}
+
+/**
+ * One glyph per tab, chosen so the silhouettes differ rather than the details: a queue and a
+ * set of playlists are both lists of tracks, and at this size only the outline reads.
+ */
+private fun LibraryTab.icon(): ImageVector = when (this) {
+    LibraryTab.SONGS -> Icons.Rounded.MusicNote
+    LibraryTab.ALBUMS -> Icons.Rounded.Album
+    LibraryTab.ARTISTS -> Icons.Rounded.Person
+    LibraryTab.QUEUE -> Icons.Rounded.QueueMusic
+    LibraryTab.PLAYLISTS -> Icons.Rounded.Star
 }
 
 private fun LibraryTab.label(): String = when (this) {
