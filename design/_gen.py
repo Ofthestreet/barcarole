@@ -161,13 +161,14 @@ def song_row(title, artist, album, dur, i=0):
 def mini(playing=True, progress=42):
     ic = I["pause"] if playing else I["play"]
     return f"""<div class="mini">
-  <div class="mini-row" style="gap:6px;padding:8px 8px 8px 16px">
+  <div class="mini-row" style="gap:0;padding:8px 8px 8px 16px">
     <div class="meta"><div class="t1" style="font-size:14px">Digital love</div>
       <div class="t2">Daft Punk</div></div>
-    <div class="iconbtn" style="width:40px;height:44px;color:var(--on-var)">{icon(I["trash"], 20)}</div>
-    <div class="iconbtn" style="width:40px;height:44px;color:var(--coral)">{icon(I["heart"], 22, "currentColor", "currentColor")}</div>
-    <div class="iconbtn" style="width:40px;height:44px;color:var(--on)">{icon(ic, 24, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
-    <div class="iconbtn" style="width:40px;height:44px;color:var(--on)">{icon(I["next"], 24, "currentColor", "currentColor")}</div>
+    <div class="iconbtn" style="width:38px;height:44px;color:var(--on-var);opacity:.7">{icon(I["trash"], 18)}</div>
+    <div class="iconbtn" style="width:40px;height:44px;color:var(--coral)">{icon(I["heart"], 20, "currentColor", "currentColor")}</div>
+    <div style="width:8px"></div>
+    <div class="iconbtn" style="width:40px;height:40px;border-radius:20px;background:var(--surface-sel);color:var(--primary)">{icon(ic, 22, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
+    <div class="iconbtn" style="width:44px;height:44px;color:var(--on)">{icon(I["next"], 24, "currentColor", "currentColor")}</div>
   </div>
   <div class="bar"><i style="width:{progress}%"></i></div>
   <div class="navspace"></div>
