@@ -5,17 +5,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -59,9 +63,9 @@ fun MiniPlayer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onExpand)
-                    .padding(start = 16.dp, end = 0.dp, top = 8.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -78,19 +82,22 @@ fun MiniPlayer(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                // Deleting sits furthest from play/pause, so a stray thumb lands on the heart
-                // rather than on the destructive one.
+                // What acts on the track comes first, drawn smaller and dimmer than the
+                // transport: these two are the rarer pair, and one of them is irreversible.
+                // Only the glyphs shrink - every button keeps its 48dp touch target.
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
                         contentDescription = "Delete this file",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 }
                 IconButton(onClick = onToggleFavourite) {
                     Icon(
                         imageVector = if (isFavourite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                         contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                        modifier = Modifier.size(20.dp),
                         tint = if (isFavourite) {
                             MaterialTheme.colorScheme.secondary
                         } else {
@@ -98,14 +105,29 @@ fun MiniPlayer(
                         },
                     )
                 }
-                IconButton(onClick = onPlayPause) {
+
+                // The gap is the boundary between acting on the track and acting on playback.
+                Spacer(Modifier.width(8.dp))
+
+                FilledTonalIconButton(
+                    onClick = onPlayPause,
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
                     Icon(
                         imageVector = if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         contentDescription = if (state.isPlaying) "Pause" else "Play",
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 IconButton(onClick = onNext) {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next track")
+                    Icon(
+                        imageVector = Icons.Rounded.SkipNext,
+                        contentDescription = "Next track",
+                        modifier = Modifier.size(24.dp),
+                    )
                 }
             }
             LinearProgressIndicator(
