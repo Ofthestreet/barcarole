@@ -39,6 +39,7 @@ jobs:
 
       - name: Build, lint and test
         env:
+          BARCAROLE_VERSION_SUFFIX: dev.${{ github.run_number }}
           BARCAROLE_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
           BARCAROLE_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
           BARCAROLE_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}

@@ -22,9 +22,13 @@ fun versionCodeOf(name: String): Int {
     return part(0) * 10_000 + part(1) * 100 + part(2)
 }
 
-// A tagged release passes its version in; every other build carries the version under
-// development, which is what the About screen shows.
-val appVersionName: String = System.getenv("BARCAROLE_VERSION_NAME") ?: "0.2.0"
+// A tagged release passes its version in. Every other build carries the version under
+// development plus a suffix naming the build it came from, so the About screen distinguishes
+// a published version from a trial build - without moving the version code, which stays derived from
+// the numbers alone and therefore identical across a release and its development builds.
+val developmentVersion = "0.2.0"
+val appVersionName: String = System.getenv("BARCAROLE_VERSION_NAME")
+    ?: listOfNotNull(developmentVersion, System.getenv("BARCAROLE_VERSION_SUFFIX")).joinToString("-")
 val appVersionCode: Int = versionCodeOf(appVersionName)
 
 android {
