@@ -97,22 +97,22 @@ C'est le cœur du sujet, et ça vaut même sans le Play Store.
 
 ## Phase 3 — Les déclarations à préparer
 
-Rien de tout cela n'est du code, mais tout est bloquant.
+Rien de tout cela n'est du code, mais tout est bloquant. Les réponses sont rédigées dans
+[play-console.md](play-console.md), prêtes à coller.
 
-- [ ] **Politique de confidentialité** hébergée à une adresse publique. Une page servie par
-      GitHub Pages depuis ce dépôt suffit. Le texte est court et honnête : l'application ne
-      collecte rien, n'a aucun accès au réseau, ne crée aucun compte.
-- [ ] **Sécurité des données** : le formulaire se remplit en quelques minutes puisque la
-      réponse est « aucune donnée collectée, aucune donnée partagée ». L'absence de permission
-      Internet est vérifiable dans le manifeste, c'est un argument solide.
-- [ ] **Service au premier plan** : depuis 2024, l'usage d'un service `mediaPlayback` doit être
-      déclaré et justifié dans la console, parfois avec une vidéo de démonstration. Le nôtre
-      sert à continuer la lecture écran éteint — c'est exactement l'usage prévu.
-- [ ] **Classification du contenu** (questionnaire IARC), **public visé**, **publicités**
-      (aucune), **accès à l'application** (aucune authentification).
+- [x] **Politique de confidentialité** écrite en français et en anglais, servie par GitHub
+      Pages depuis `docs/` : <https://ofthestreet.github.io/barcarole/privacy.html>
+- [x] **Sécurité des données** : réponses préparées dans [play-console.md](play-console.md).
+- [x] **Service au premier plan** : justification rédigée, prête à coller. Une vidéo de
+      démonstration reste à filmer si la console la réclame.
+- [x] **Classification du contenu**, **public visé**, **publicités**, **accès à
+      l'application** : toutes les réponses sont arrêtées dans la fiche.
 - [ ] **Android Auto** : déclarer le support voiture peut déclencher un examen supplémentaire
       contre les règles de distraction au volant. En test interne, la portée de cet examen est
-      à vérifier au moment venu — c'est le point le plus incertain de ce plan.
+      à vérifier au moment venu — c'est le point le plus incertain de ce plan. Une issue de
+      secours est notée dans la fiche.
+- [ ] **Captures d'écran** de l'application, prises sur le téléphone : Google veut de vraies
+      captures, pas des maquettes. À ta charge.
 
 ## Phase 4 — La console
 
