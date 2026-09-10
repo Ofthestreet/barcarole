@@ -167,8 +167,8 @@ def mini(playing=True, progress=42):
     <div class="iconbtn" style="width:38px;height:44px;color:var(--on-var);opacity:.7">{icon(I["trash"], 18)}</div>
     <div class="iconbtn" style="width:40px;height:44px;color:var(--coral)">{icon(I["heart"], 20, "currentColor", "currentColor")}</div>
     <div style="width:8px"></div>
-    <div class="iconbtn" style="width:40px;height:40px;border-radius:20px;background:var(--surface-sel);color:var(--primary)">{icon(ic, 22, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
-    <div class="iconbtn" style="width:44px;height:44px;color:var(--on)">{icon(I["next"], 24, "currentColor", "currentColor")}</div>
+    <div class="iconbtn" style="width:48px;height:48px;border-radius:24px;background:var(--primary);color:var(--on-primary)">{icon(ic, 28, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
+    <div class="iconbtn" style="width:48px;height:48px;color:var(--on)">{icon(I["next"], 28, "currentColor", "currentColor")}</div>
   </div>
   <div class="bar"><i style="width:{progress}%"></i></div>
   <div class="navspace"></div>

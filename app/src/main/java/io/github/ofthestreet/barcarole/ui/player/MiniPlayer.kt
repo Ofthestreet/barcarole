@@ -17,9 +17,8 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -109,24 +108,23 @@ fun MiniPlayer(
                 // The gap is the boundary between acting on the track and acting on playback.
                 Spacer(Modifier.width(8.dp))
 
-                FilledTonalIconButton(
+                // The accent colour, not a tint of the surface: a container a few percent
+                // lighter than the bar it sits on reads as nothing at all.
+                FilledIconButton(
                     onClick = onPlayPause,
-                    colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ),
+                    modifier = Modifier.size(48.dp),
                 ) {
                     Icon(
                         imageVector = if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         contentDescription = if (state.isPlaying) "Pause" else "Play",
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(28.dp),
                     )
                 }
                 IconButton(onClick = onNext) {
                     Icon(
                         imageVector = Icons.Rounded.SkipNext,
                         contentDescription = "Next track",
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(28.dp),
                     )
                 }
             }
