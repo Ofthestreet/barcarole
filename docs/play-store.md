@@ -51,7 +51,7 @@ C'est le cœur du sujet, et ça vaut même sans le Play Store.
       types de construction la prennent : l'APK installé à la main mérite des mises à jour
       stables autant que le bundle envoyé au magasin.
 - [x] **Les deux workflows** reconstituent le keystore depuis les secrets avant de construire.
-- [ ] **Générer la clé d'upload** — à faire par toi, une clé privée ne doit transiter par
+- [x] **Générer la clé d'upload** — à faire par toi, une clé privée ne doit transiter par
       personne :
 
       keytool -genkeypair -v -keystore upload.jks -alias upload \
@@ -59,7 +59,7 @@ C'est le cœur du sujet, et ça vaut même sans le Play Store.
 
       La sauvegarder ailleurs que sur le Mac, avec ses mots de passe.
 
-- [ ] **Déposer quatre secrets** dans *Settings → Secrets and variables → Actions* du dépôt :
+- [x] **Déposer quatre secrets** dans *Settings → Secrets and variables → Actions* du dépôt :
 
       | Secret | Contenu |
       |---|---|
@@ -68,8 +68,14 @@ C'est le cœur du sujet, et ça vaut même sans le Play Store.
       | `UPLOAD_KEY_ALIAS` | `upload` |
       | `UPLOAD_KEY_PASSWORD` | le mot de passe de la clé |
 
-      Dès qu'ils existent, les APK produits gardent la même identité d'une version à l'autre et
-      s'installent par-dessus la précédente sans rien effacer — **sans attendre le Play Store**.
+      ✅ Fait, et vérifié : deux constructions successives produisent un certificat de
+      signature identique, qui n'est plus une clé de débogage. Les APK s'installent maintenant
+      par-dessus la précédente sans rien effacer, **sans attendre le Play Store**.
+
+      Une conséquence à prévoir pour plus tard : avec Play App Signing, Google resigne le
+      bundle avec sa propre clé. La version venue du Play Store n'aura donc pas la même
+      signature que celles installées à la main, et ne pourra pas s'installer par-dessus. Le
+      jour du basculement, il faudra désinstaller une dernière fois.
 - [ ] Activer **Play App Signing** à la création de l'application dans la console. Google
       conserve alors la clé de signature définitive ; ta clé d'upload ne sert qu'à lui prouver
       que l'envoi vient de toi. Si tu la perds, elle se réinitialise — c'est précisément ce qui

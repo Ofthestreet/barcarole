@@ -53,15 +53,18 @@ from an "unknown source", with the warnings that come with it, explained right a
 latest successful run (green tick), download the **`barcarole-debug-apk`** archive and unzip
 it to get the APK.
 
-### Updating: for now, uninstall first
+### Updating
 
-Every build is signed with a debug key that is **regenerated on each run** of the build
-pipeline. Android refuses to install over an app signed with a different key: the message is
-"App not installed".
+Builds are signed with a stable key, held in the repository secrets. A new version **installs
+over the previous one** and keeps the settings, the favourites and the listening history. That
+is verified rather than assumed: two successive builds produce an identical signing
+certificate.
 
-In practice, today: moving to a new version means **uninstalling the old one first**, and
-uninstalling takes the settings, the favourites and the listening history with it. This is
-fixable — the next section says how.
+**One exception, once.** Versions from before the rename carried the application id
+`com.cdelarue.localmusic`. To Android that is a **different app**: the first
+`io.github.ofthestreet.barcarole` build will not replace it, it will install alongside. So
+uninstall the old one once, then install the new one. After that, updates follow on without
+losing anything.
 
 ## "Unverified app": what that actually means
 
@@ -75,7 +78,7 @@ Three different warnings can show up, and they do not say the same thing:
 |---|---|---|
 | "Unknown apps from this source" | The file did not come from a store | No — that is what direct installation is. The permission is granted once per source. |
 | Play Protect: "scan app", "unknown developer" | Google does not recognise the signature | It can be dismissed. Turning Play Protect off is possible but unwise. |
-| "App not installed" when updating | The signature differs from the installed one | Yes, with a stable signing key |
+| "App not installed" when updating | The signature differs from the installed one | ✅ Fixed: builds are signed with a stable key |
 
 **What a stable key fixes.** Generate a key once, keep it, and sign every version with it:
 updates then install over the previous one losing nothing, and the app finally has a constant,

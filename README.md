@@ -56,15 +56,18 @@ expliqués juste après.
 dépôt, dernière exécution réussie (coche verte), télécharger l'archive
 **`barcarole-debug-apk`** et la décompresser pour en sortir l'APK.
 
-### Mettre à jour : pour l'instant, il faut désinstaller d'abord
+### Mettre à jour
 
-Chaque build est signé avec une clé de débogage **régénérée à chaque exécution** de la chaîne
-de construction. Android refuse d'installer par-dessus une application signée par une autre
-clé : le message est « L'application n'a pas été installée ».
+Les versions sont signées par une clé stable, conservée dans les secrets du dépôt. Une
+nouvelle version **s'installe par-dessus la précédente** et garde les réglages, les favoris et
+l'historique d'écoutes. C'est vérifié, pas supposé : deux constructions successives produisent
+un certificat de signature identique.
 
-Concrètement, aujourd'hui : pour passer à une nouvelle version, il faut **désinstaller
-l'ancienne**, et la désinstallation emporte les réglages, les favoris et l'historique
-d'écoutes. Ce n'est pas une fatalité — la section suivante explique comment y remédier.
+**Une exception, une seule fois.** Les versions antérieures au renommage portaient
+l'identifiant `com.cdelarue.localmusic`. Pour Android, c'est une **autre application** : la
+première version `io.github.ofthestreet.barcarole` ne la remplacera pas, elle s'installera à
+côté. Il faut donc désinstaller l'ancienne une bonne fois, puis installer la nouvelle. Ensuite
+les mises à jour s'enchaînent sans rien perdre.
 
 ## « Application non authentifiée » : ce que ça veut dire
 
@@ -78,7 +81,7 @@ Trois avertissements différents peuvent apparaître, et ils ne disent pas la m�
 |---|---|---|
 | « Applications inconnues provenant de cette source » | Le fichier ne vient pas d'une boutique | Non — c'est le principe même de l'installation directe. L'autorisation se donne une fois par source. |
 | Play Protect : « analyser l'application », « développeur inconnu » | Google ne reconnaît pas la signature | On peut passer outre. Désactiver Play Protect est possible, mais déconseillé. |
-| « L'application n'a pas été installée » lors d'une mise à jour | La signature diffère de celle déjà installée | Oui, avec une clé de signature stable |
+| « L'application n'a pas été installée » lors d'une mise à jour | La signature diffère de celle déjà installée | ✅ Réglé : les versions sont signées par une clé stable |
 
 **Ce qu'une clé stable règle.** Générer une clé une fois, la garder, et signer toutes les
 versions avec elle : les mises à jour s'installent alors par-dessus la précédente sans rien
