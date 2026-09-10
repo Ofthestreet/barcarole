@@ -6,20 +6,45 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+// The upload key, when this build has one: an explicit path, or the file CI writes from the
+// repository secrets. Never committed - see .gitignore.
+val uploadKeystore: String? = System.getenv("BARCAROLE_KEYSTORE_FILE")
+    ?: rootProject.file("keystore/upload.jks").takeIf { it.exists() }?.absolutePath
+
 android {
-    namespace = "com.cdelarue.localmusic"
+    namespace = "io.github.ofthestreet.barcarole"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.cdelarue.localmusic"
+        applicationId = "io.github.ofthestreet.barcarole"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
     }
 
+    // A stable signing key is what lets a new version install over the previous one. When the
+    // build has none - a clone without the secrets - it falls back to the throwaway debug key,
+    // which is regenerated per machine and therefore breaks updates.
+    signingConfigs {
+        if (uploadKeystore != null) {
+            create("upload") {
+                storeFile = file(uploadKeystore)
+                storePassword = System.getenv("BARCAROLE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("BARCAROLE_KEY_ALIAS") ?: "upload"
+                keyPassword = System.getenv("BARCAROLE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
+        // Both types take the key: the APK installed by hand deserves stable updates as much
+        // as the bundle sent to the store.
+        debug {
+            if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
+        }
         release {
+            if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

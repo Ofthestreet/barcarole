@@ -28,14 +28,15 @@ personnes pendant quatorze jours**, qui est l'obstacle réel pour un compte pers
 
 ## Phase 0 — Deux décisions à prendre maintenant
 
-**1. L'identifiant de l'application est gelé à vie.** Aujourd'hui c'est
-`com.cdelarue.localmusic`, hérité du nom d'origine. Une fois une version envoyée au Play
-Store, il ne peut plus jamais changer : ce serait une autre application, avec une autre fiche
-et aucune continuité. Si tu veux `com.cdelarue.barcarole`, **c'est maintenant ou jamais**.
+**1. L'identifiant de l'application est gelé à vie.** ✅ **Fait** : il est passé de
+`com.cdelarue.localmusic` à **`io.github.ofthestreet.barcarole`**, en même temps que le paquet
+Java. La forme `io.github.<compte>` est la convention pour un projet hébergé sur GitHub ; elle
+désigne un espace de noms réellement contrôlé et n'expose que le pseudonyme, pas le nom de
+famille — l'identifiant est visible dans l'URL du Play Store et lisible dans l'APK.
 
-Le coût du changement, aujourd'hui, est nul côté Play Store et faible côté téléphone : la
-version installée à la main ne sera pas mise à jour par la nouvelle, il faudra la désinstaller
-— ce qui est déjà le cas à chaque version.
+C'est modifiable jusqu'au premier envoi au Play Store, plus jamais après. Conséquence
+immédiate sur le téléphone : Android voit une **application différente**, donc la version
+déjà installée n'est pas remplacée — il faut la désinstaller.
 
 **2. Compte personnel ou organisation.** Un compte personnel suffit ici. Il demande une pièce
 d'identité et une adresse. Un compte d'organisation exige un identifiant D-U-N-S et prend plus
@@ -45,11 +46,30 @@ longtemps ; il n'apporte rien tant qu'on reste en test interne.
 
 C'est le cœur du sujet, et ça vaut même sans le Play Store.
 
-- [ ] Générer une **clé d'upload** avec `keytool`, protégée par mot de passe, et la sauvegarder
-      ailleurs que sur le Mac. Cette clé ne doit passer par personne d'autre que toi.
-- [ ] Déposer le keystore et ses mots de passe dans les **secrets du dépôt GitHub**.
-- [ ] Configurer Gradle pour signer avec cette clé quand les secrets existent, et retomber sur
-      la clé de débogage sinon — pour que la construction reste verte sans eux.
+- [x] **Gradle sait signer** avec une clé stable dès qu'elle est disponible, et retombe sur la
+      clé de débogage sinon, pour qu'un clone sans les secrets construise quand même. Les deux
+      types de construction la prennent : l'APK installé à la main mérite des mises à jour
+      stables autant que le bundle envoyé au magasin.
+- [x] **Les deux workflows** reconstituent le keystore depuis les secrets avant de construire.
+- [ ] **Générer la clé d'upload** — à faire par toi, une clé privée ne doit transiter par
+      personne :
+
+      keytool -genkeypair -v -keystore upload.jks -alias upload \
+        -keyalg RSA -keysize 4096 -validity 10000
+
+      La sauvegarder ailleurs que sur le Mac, avec ses mots de passe.
+
+- [ ] **Déposer quatre secrets** dans *Settings → Secrets and variables → Actions* du dépôt :
+
+      | Secret | Contenu |
+      |---|---|
+      | `UPLOAD_KEYSTORE_BASE64` | `base64 -i upload.jks` |
+      | `UPLOAD_KEYSTORE_PASSWORD` | le mot de passe du keystore |
+      | `UPLOAD_KEY_ALIAS` | `upload` |
+      | `UPLOAD_KEY_PASSWORD` | le mot de passe de la clé |
+
+      Dès qu'ils existent, les APK produits gardent la même identité d'une version à l'autre et
+      s'installent par-dessus la précédente sans rien effacer — **sans attendre le Play Store**.
 - [ ] Activer **Play App Signing** à la création de l'application dans la console. Google
       conserve alors la clé de signature définitive ; ta clé d'upload ne sert qu'à lui prouver
       que l'envoi vient de toi. Si tu la perds, elle se réinitialise — c'est précisément ce qui
