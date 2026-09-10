@@ -12,3 +12,4 @@ captures/
 *.jks
 keystore/
 !gradle/wrapper/gradle-wrapper.jar
+design/*-screens.html
