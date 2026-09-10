@@ -27,7 +27,11 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             mkdir -p keystore
-            printf '%s' "$KEYSTORE_BASE64" | base64 -d > keystore/upload.jks
+            printf '%s' "$KEYSTORE_BASE64" | tr -d '\n\r' | base64 -d > keystore/upload.jks
+            if [ ! -s keystore/upload.jks ]; then
+              echo "The upload key secret did not decode to a keystore." >&2
+              exit 1
+            fi
             echo "Signing with the upload key."
           else
             echo "No upload key configured; falling back to the debug key."
