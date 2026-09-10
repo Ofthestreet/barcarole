@@ -81,9 +81,9 @@ fun MiniPlayer(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                // What acts on the track comes first, drawn smaller and dimmer than the
-                // transport: these two are the rarer pair, and one of them is irreversible.
-                // Only the glyphs shrink - every button keeps its 48dp touch target.
+                // The bin is the only diminished one: rarest of the four, and the only one
+                // that cannot be undone. Only the glyph shrinks - every button keeps its 48dp
+                // touch target.
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Rounded.Delete,
@@ -92,11 +92,13 @@ fun MiniPlayer(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 }
+                Spacer(Modifier.width(8.dp))
+
                 IconButton(onClick = onToggleFavourite) {
                     Icon(
                         imageVector = if (isFavourite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                         contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(28.dp),
                         tint = if (isFavourite) {
                             MaterialTheme.colorScheme.secondary
                         } else {
@@ -104,9 +106,6 @@ fun MiniPlayer(
                         },
                     )
                 }
-
-                // The gap is the boundary between acting on the track and acting on playback.
-                Spacer(Modifier.width(8.dp))
 
                 // The accent colour, not a tint of the surface: a container a few percent
                 // lighter than the bar it sits on reads as nothing at all.

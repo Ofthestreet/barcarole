@@ -165,8 +165,8 @@ def mini(playing=True, progress=42):
     <div class="meta"><div class="t1" style="font-size:14px">Digital love</div>
       <div class="t2">Daft Punk</div></div>
     <div class="iconbtn" style="width:38px;height:44px;color:var(--on-var);opacity:.7">{icon(I["trash"], 18)}</div>
-    <div class="iconbtn" style="width:40px;height:44px;color:var(--coral)">{icon(I["heart"], 20, "currentColor", "currentColor")}</div>
     <div style="width:8px"></div>
+    <div class="iconbtn" style="width:48px;height:48px;color:var(--coral)">{icon(I["heart"], 28, "currentColor", "currentColor")}</div>
     <div class="iconbtn" style="width:48px;height:48px;border-radius:24px;background:var(--primary);color:var(--on-primary)">{icon(ic, 28, "currentColor", "currentColor" if ic == I["play"] else "none")}</div>
     <div class="iconbtn" style="width:48px;height:48px;color:var(--on)">{icon(I["next"], 28, "currentColor", "currentColor")}</div>
   </div>
