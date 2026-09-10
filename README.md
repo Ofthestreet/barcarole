@@ -220,13 +220,25 @@ ajouté à la suite ou en fin de file depuis un appui long.
 Barcarole apparaît dans Android Auto avec les favoris, les titres, les artistes et les
 dossiers, et répond à la recherche vocale.
 
-Une application installée à la main n'apparaît pas dans la voiture par défaut. Une fois, sur
-le téléphone, dans l'application Android Auto :
+Une application installée à la main n'apparaît pas dans la voiture par défaut : Android Auto
+n'accepte que ce qui vient d'une boutique, sauf si on lève le verrou. C'est à faire une fois.
 
-1. Ouvrir les paramètres et taper une dizaine de fois sur le numéro de version, tout en bas,
-   pour débloquer le mode développeur.
-2. Dans les paramètres développeur, activer **Sources inconnues**.
-3. Rebrancher le téléphone à la voiture.
+Android Auto n'a plus d'icône à ouvrir — le mode « sur l'écran du téléphone » a été supprimé
+en 2022, il ne reste qu'un composant système. On atteint ses réglages par les paramètres du
+téléphone : le plus sûr est d'ouvrir les *Paramètres*, de chercher `Android Auto` dans la
+loupe, sinon *Paramètres → Appareils connectés → Préférences de connexion → Android Auto*.
+Sur certains téléphones cette entrée n'apparaît qu'après une première connexion à une voiture.
+
+1. Descendre tout en bas jusqu'à **Version**, taper une dizaine de fois dessus, accepter la
+   boîte de dialogue : le mode développeur est débloqué.
+2. Menu **⋮** → **Paramètres pour les développeurs** → activer **Sources inconnues**.
+3. Dans **Personnaliser le lanceur**, vérifier que Barcarole est bien activée — y figurer ne
+   suffit pas toujours, et c'est là qu'on choisit sa place dans le lanceur de la voiture.
+4. Forcer l'arrêt d'Android Auto, puis rebrancher le téléphone à la voiture.
+
+Ouvrir Barcarole une fois sur le téléphone et accorder l'accès aux fichiers audio avant tout
+cela : la voiture interroge le même service que l'application, et sans permission les listes
+arriveraient vides.
 
 ## Ce qui se passe quand on quitte l'application
 

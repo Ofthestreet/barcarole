@@ -204,13 +204,24 @@ long press.
 Barcarole appears in Android Auto with favourites, songs, artists and folders, and answers
 voice search.
 
-A sideloaded app does not show up in the car by default. Once, on the phone, in the Android
-Auto app:
+A sideloaded app does not show up in the car by default: Android Auto only accepts what comes
+from a store, unless the lock is lifted. This is a one-off.
 
-1. Open the settings and tap the version number at the very bottom about ten times to unlock
-   developer mode.
-2. In the developer settings, switch on **Unknown sources**.
-3. Reconnect the phone to the car.
+Android Auto has no icon to open any more — the "on phone screen" mode was removed in 2022 and
+only a system component remains. Its settings are reached through the phone's own Settings:
+the surest route is to open *Settings* and search for `Android Auto`, otherwise
+*Settings → Connected devices → Connection preferences → Android Auto*. On some phones that
+entry only appears after the phone has been connected to a car once.
+
+1. Scroll to the bottom, tap **Version** about ten times and accept the dialog: developer mode
+   is unlocked.
+2. Menu **⋮** → **Developer settings** → switch on **Unknown sources**.
+3. Under **Customise launcher**, check that Barcarole is actually enabled — being listed is not
+   always enough, and this is where its place in the car's launcher is chosen.
+4. Force stop Android Auto, then reconnect the phone to the car.
+
+Open Barcarole once on the phone and grant it access to audio files before any of this: the car
+queries the same service the app does, and without the permission the lists would arrive empty.
 
 ## What happens when you leave the app
 
