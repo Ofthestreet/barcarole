@@ -39,8 +39,9 @@ expliqués juste après.
 
 **Pas à pas, depuis le téléphone :**
 
-1. Ouvrir le lien ci-dessus et toucher le fichier `barcarole-v0.1.0.apk` attaché à la
-   version. Le navigateur le télécharge.
+1. Ouvrir le lien ci-dessus et toucher le fichier **`.apk`** attaché à la version — pas le
+   `.aab`, qui est le format réservé au Play Store et ne s'installe pas. Le navigateur le
+   télécharge.
 2. Ouvrir le fichier téléchargé : depuis la notification de téléchargement, ou dans le
    dossier **Téléchargements** du gestionnaire de fichiers.
 3. Android refuse une première fois : « Pour votre sécurité, votre téléphone n'est pas

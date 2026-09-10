@@ -83,14 +83,17 @@ C'est le cœur du sujet, et ça vaut même sans le Play Store.
 
 ## Phase 2 — Le format et la chaîne de construction
 
-- [ ] Produire un **Android App Bundle** (`.aab`) : le Play Store n'accepte plus l'APK pour une
-      nouvelle application.
-- [ ] Faire **incrémenter le `versionCode`** automatiquement, par exemple depuis le numéro
-      d'exécution du workflow. Le Play Store refuse deux envois avec le même numéro.
-- [ ] Vérifier le `targetSdk`. Il est à 36, largement au-dessus du minimum exigé, mais cette
-      exigence monte chaque année : à revérifier le jour où tu t'y mets.
-- [ ] Garder le workflow APK en parallèle, pour continuer à installer directement quand c'est
-      pratique.
+- [x] Produire un **Android App Bundle** (`.aab`) : le Play Store n'accepte plus l'APK pour une
+      nouvelle application. Chaque version publiée en attache un, à côté de l'APK.
+- [x] Faire **incrémenter le `versionCode`** automatiquement. Il est déduit du nom de version,
+      lui-même lu sur l'étiquette Git : `v1.2.3` donne le code `10203`. Une seule source de
+      vérité, et un numéro qui ne peut pas régresser tant que les versions montent. Contrainte :
+      mineur et correctif doivent rester sous 100.
+- [x] Vérifier le `targetSdk` : 36, largement au-dessus du minimum exigé. Cette exigence monte
+      chaque année, à revérifier le jour de l'envoi.
+- [x] Garder l'APK en parallèle, pour continuer à installer directement quand c'est pratique.
+      La version publiée est désormais une construction *release* et non plus *debug* : elle
+      n'est plus marquée déboguable, ce qu'un artefact distribué n'a rien à faire d'être.
 
 ## Phase 3 — Les déclarations à préparer
 

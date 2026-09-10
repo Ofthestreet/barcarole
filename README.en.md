@@ -37,8 +37,8 @@ from an "unknown source", with the warnings that come with it, explained right a
 
 **Step by step, from the phone:**
 
-1. Open the link above and tap the `barcarole-v0.1.0.apk` file attached to the release. The
-   browser downloads it.
+1. Open the link above and tap the **`.apk`** file attached to the release — not the `.aab`,
+   which is the Play Store format and cannot be installed. The browser downloads it.
 2. Open the downloaded file: from the download notification, or from the **Downloads** folder
    in the file manager.
 3. Android refuses the first time: "For your security, your phone is not allowed to install

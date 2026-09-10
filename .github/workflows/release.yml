@@ -1,4 +1,4 @@
-name: Release APK
+name: Release
 
 on:
   push:
@@ -23,36 +23,53 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Restore the upload key, when the repository has one
+      - name: Read the version from the tag
+        run: |
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            echo "This workflow publishes a tagged version; run it on a tag." >&2
+            exit 1
+          fi
+          echo "BARCAROLE_VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      # Unlike the development build, a published version has no business falling back to a
+      # throwaway key: an unsigned release APK cannot be installed at all.
+      - name: Restore the upload key
         env:
           KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
-            mkdir -p keystore
-            printf '%s' "$KEYSTORE_BASE64" | tr -d '\n\r' | base64 -d > keystore/upload.jks
-            if [ ! -s keystore/upload.jks ]; then
-              echo "The upload key secret did not decode to a keystore." >&2
-              exit 1
-            fi
-            echo "Signing with the upload key."
-          else
-            echo "No upload key configured; falling back to the debug key."
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "No upload key configured; a release cannot be signed." >&2
+            exit 1
+          fi
+          mkdir -p keystore
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '\n\r' | base64 -d > keystore/upload.jks
+          if [ ! -s keystore/upload.jks ]; then
+            echo "The upload key secret did not decode to a keystore." >&2
+            exit 1
           fi
 
-      - name: Build debug APK
+      # The APK is what a phone installs directly; the bundle is what the Play Store takes.
+      - name: Build the APK and the bundle
         env:
           BARCAROLE_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
           BARCAROLE_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
           BARCAROLE_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleRelease bundleRelease --stacktrace
 
-      - name: Name the APK after the tag
+      - name: Name both after the tag
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/debug/app-debug.apk "dist/barcarole-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/apk/release/app-release.apk "dist/barcarole-${GITHUB_REF_NAME}.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "dist/barcarole-${GITHUB_REF_NAME}.aab"
+          ls -l dist
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*.apk
+          files: |
+            dist/*.apk
+            dist/*.aab
           generate_release_notes: true
+          body: |
+            Install the **.apk** on a phone. The **.aab** is the bundle the Play Store takes;
+            it cannot be installed directly.

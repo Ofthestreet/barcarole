@@ -16,8 +16,15 @@ to `main` runs `assembleDebug`, `lintDebug` and `testDebugUnitTest` on GitHub Ac
 uploads the APK as the `barcarole-debug-apk` artifact. Lint failures break the build on
 purpose: they are the only static check standing between a change and a phone.
 
-Tagging a commit `v0.1.0` publishes the APK to a GitHub Release instead, which is a single
-link the phone can open directly.
+Tagging a commit `v0.2.0` publishes a release instead: a signed release APK, which is a single
+link the phone can open directly, and the `.aab` bundle the Play Store takes. Both are named
+after the tag, and the tag is the only place a version number is written - `versionName` comes
+from it and `versionCode` is derived from that (`1.2.3` becomes `10203`), so minor and patch
+have to stay below 100.
+
+Signing uses an upload key restored from the repository secrets. The development build falls
+back to a debug key when they are absent, so a clone still builds; a release refuses to, since
+an unsigned release APK cannot be installed at all.
 
 ## Unit tests
 

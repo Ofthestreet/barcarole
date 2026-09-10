@@ -11,6 +11,22 @@ plugins {
 val uploadKeystore: String? = System.getenv("BARCAROLE_KEYSTORE_FILE")
     ?: rootProject.file("keystore/upload.jks").takeIf { it.exists() }?.absolutePath
 
+/**
+ * The Play Store refuses an upload whose version code it has already seen, and never accepts a
+ * lower one, so the code is derived from the version name rather than typed by hand: 1.2.3
+ * becomes 10203. Minor and patch therefore have to stay below 100.
+ */
+fun versionCodeOf(name: String): Int {
+    val parts = name.removePrefix("v").substringBefore('-').split('.')
+    fun part(index: Int) = parts.getOrNull(index)?.toIntOrNull() ?: 0
+    return part(0) * 10_000 + part(1) * 100 + part(2)
+}
+
+// A tagged release passes its version in; every other build carries the version under
+// development, which is what the About screen shows.
+val appVersionName: String = System.getenv("BARCAROLE_VERSION_NAME") ?: "0.2.0"
+val appVersionCode: Int = versionCodeOf(appVersionName)
+
 android {
     namespace = "io.github.ofthestreet.barcarole"
     compileSdk = 36
@@ -19,8 +35,8 @@ android {
         applicationId = "io.github.ofthestreet.barcarole"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     // A stable signing key is what lets a new version install over the previous one. When the
