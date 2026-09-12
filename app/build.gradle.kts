@@ -26,7 +26,7 @@ fun versionCodeOf(name: String): Int {
 // development plus a suffix naming the build it came from, so the About screen distinguishes
 // a published version from a trial build - without moving the version code, which stays derived from
 // the numbers alone and therefore identical across a release and its development builds.
-val developmentVersion = "0.2.0"
+val developmentVersion = "0.3.0"
 val appVersionName: String = System.getenv("BARCAROLE_VERSION_NAME")
     ?: listOfNotNull(developmentVersion, System.getenv("BARCAROLE_VERSION_SUFFIX")).joinToString("-")
 val appVersionCode: Int = versionCodeOf(appVersionName)
