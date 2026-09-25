@@ -13,10 +13,9 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionError
 import io.github.ofthestreet.barcarole.data.LibraryRepository
-import io.github.ofthestreet.barcarole.data.SettingsStore
-import io.github.ofthestreet.barcarole.data.stats.PlaylistId
 import io.github.ofthestreet.barcarole.data.stats.PlaylistRepository
 import io.github.ofthestreet.barcarole.data.albumArtUri
+import io.github.ofthestreet.barcarole.util.AudioPermission
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -46,7 +45,7 @@ class PlaybackService : MediaLibraryService() {
 
     @Inject lateinit var playlistRepository: PlaylistRepository
 
-    @Inject lateinit var settingsStore: SettingsStore
+    @Inject lateinit var browseContextSource: BrowseContextSource
 
     @Inject lateinit var appScope: CoroutineScope
 
@@ -74,8 +73,39 @@ class PlaybackService : MediaLibraryService() {
         player = exoPlayer
         session = MediaLibrarySession.Builder(this, exoPlayer, LibraryCallback()).build()
         startListenTracking()
+        startLibraryForBrowsers()
+        announceBrowseChanges()
+    }
+
+    /**
+     * Android Auto binds this service without ever launching the activity, so on a phone whose app
+     * has not been opened nothing has asked for a scan by the time the car browses. Without this the
+     * browse tree is handed an empty library and every list in the car is empty.
+     */
+    private fun startLibraryForBrowsers() {
+        // Without the permission a scan reads nothing; the phone UI is where it gets asked for.
+        if (AudioPermission.isGranted(this)) libraryRepository.start()
+    }
+
+    /**
+     * The browse callbacks answer synchronously from whatever is loaded, so a scan finishing after
+     * the car has already asked has to be announced — otherwise the car keeps showing the empty list
+     * it cached and only a restart fixes it. Notifying a parent no browser subscribed to is a no-op,
+     * so the root and its tabs are all announced together.
+     */
+    private fun announceBrowseChanges() {
         serviceScope.launch {
-            settingsStore.settings.collect { showAlbums = it.showAlbums }
+            browseContextSource.context.collect { context ->
+                val librarySession = session ?: return@collect
+                val parents = listOf(BrowseIds.ROOT) + BrowseTree.rootChildren(context).map { it.id }
+                parents.forEach { parentId ->
+                    librarySession.notifyChildrenChanged(
+                        parentId,
+                        BrowseTree.childrenOf(context, parentId).size,
+                        null,
+                    )
+                }
+            }
         }
     }
 
@@ -99,14 +129,8 @@ class PlaybackService : MediaLibraryService() {
      */
     private var countedCurrent = false
 
-    /** Mirrored from settings so the browse callbacks, which are synchronous, can read it. */
-    private var showAlbums = false
-
-    private fun browseContext() = BrowseContext(
-        library = libraryRepository.library.value,
-        favourites = playlistRepository.songsOf(PlaylistId.FAVOURITES),
-        showAlbums = showAlbums,
-    )
+    /** The synchronous browse callbacks read the snapshot [BrowseContextSource] keeps warm. */
+    private fun browseContext() = browseContextSource.context.value
 
     private val trackChanges = object : Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
