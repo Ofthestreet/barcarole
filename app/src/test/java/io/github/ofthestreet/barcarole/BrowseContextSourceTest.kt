@@ -9,8 +9,9 @@ import io.github.ofthestreet.barcarole.playback.BrowseTree
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -21,6 +22,10 @@ import org.junit.Test
  * The browse tree's own test builds a context by hand, which is the one thing the car never does.
  * These drive the tree through the context the service actually reads, which is where the car found
  * the lists empty: the tabs were there, and every one of them was blank.
+ *
+ * Unconfined throughout, so the eager sharing starts the moment the source is built and each case is
+ * about the context being ready rather than about when a test scheduler gets round to it. A context
+ * shared only while subscribed to would still read empty here, which is what these assertions catch.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BrowseContextSourceTest {
@@ -40,11 +45,11 @@ class BrowseContextSourceTest {
     }
 
     @Test
-    fun `the car sees songs and favourites without the phone screen ever being opened`() = runTest {
+    fun `the car sees songs and favourites without the phone screen ever being opened`() = runTest(UnconfinedTestDispatcher()) {
         val inputs = Inputs(favouriteIds = MutableStateFlow(listOf(3L, 1L)))
         inputs.library.value = scanned
         val source = inputs.source(this)
-        advanceUntilIdle()
+        runCurrent()
 
         // Read through .value, with nothing collecting: that is all a browse callback gets to do.
         val context = source.context.value
@@ -54,23 +59,23 @@ class BrowseContextSourceTest {
     }
 
     @Test
-    fun `favourites are still there long after any screen would have stopped watching`() = runTest {
+    fun `favourites are still there long after any screen would have stopped watching`() = runTest(UnconfinedTestDispatcher()) {
         val inputs = Inputs(favouriteIds = MutableStateFlow(listOf(2L)))
         inputs.library.value = scanned
         val source = inputs.source(this)
-        advanceUntilIdle()
+        runCurrent()
 
         // A snapshot shared only while subscribed to would have lapsed by now; this one may not.
         advanceTimeBy(FIVE_MINUTES_MS)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(listOf("Beta"), BrowseTree.childrenOf(source.context.value, BrowseIds.TAB_FAVOURITES).map { it.title })
     }
 
     @Test
-    fun `a scan landing after the car has already asked changes the context, so it can be announced`() = runTest {
+    fun `a scan landing after the car has already asked changes the context, so it can be announced`() = runTest(UnconfinedTestDispatcher()) {
         val inputs = Inputs()
         val source = inputs.source(this)
-        advanceUntilIdle()
+        runCurrent()
 
         // The car connects first: this is the empty answer it caches.
         val beforeScan = source.context.value
@@ -78,7 +83,7 @@ class BrowseContextSourceTest {
 
         inputs.library.value = scanned
         inputs.favouriteIds.value = listOf(1L)
-        advanceUntilIdle()
+        runCurrent()
 
         // A new value is what the service notifies the car about; an unchanged one would be silent.
         val afterScan = source.context.value
@@ -88,24 +93,24 @@ class BrowseContextSourceTest {
     }
 
     @Test
-    fun `the albums tab follows the setting, in the car as on the phone`() = runTest {
+    fun `the albums tab follows the setting, in the car as on the phone`() = runTest(UnconfinedTestDispatcher()) {
         val inputs = Inputs()
         inputs.library.value = scanned
         val source = inputs.source(this)
-        advanceUntilIdle()
+        runCurrent()
         assertTrue(BrowseTree.rootChildren(source.context.value).none { it.id == BrowseIds.TAB_ALBUMS })
 
         inputs.showAlbums.value = true
-        advanceUntilIdle()
+        runCurrent()
         assertTrue(BrowseTree.rootChildren(source.context.value).any { it.id == BrowseIds.TAB_ALBUMS })
     }
 
     @Test
-    fun `a favourite whose file has gone drops out instead of emptying the list`() = runTest {
+    fun `a favourite whose file has gone drops out instead of emptying the list`() = runTest(UnconfinedTestDispatcher()) {
         val inputs = Inputs(favouriteIds = MutableStateFlow(listOf(99L, 2L)))
         inputs.library.value = scanned
         val source = inputs.source(this)
-        advanceUntilIdle()
+        runCurrent()
 
         assertEquals(listOf("Beta"), BrowseTree.childrenOf(source.context.value, BrowseIds.TAB_FAVOURITES).map { it.title })
     }
