@@ -14,6 +14,7 @@ data class Song(
     val dateAddedSeconds: Long,
     val path: String,
     val sizeBytes: Long = 0,
+    val genre: String = "",
 ) {
     val folderPath: String
         get() = path.substringBeforeLast('/', missingDelimiterValue = "")
@@ -43,12 +44,18 @@ data class Folder(
         get() = path.substringAfterLast('/', missingDelimiterValue = path).ifEmpty { path }
 }
 
+data class Genre(
+    val name: String,
+    val songCount: Int,
+)
+
 /** Everything derived from one MediaStore scan. */
 data class Library(
     val songs: List<Song> = emptyList(),
     val albums: List<Album> = emptyList(),
     val artists: List<Artist> = emptyList(),
     val folders: List<Folder> = emptyList(),
+    val genres: List<Genre> = emptyList(),
 ) {
     val isEmpty: Boolean get() = songs.isEmpty()
 }

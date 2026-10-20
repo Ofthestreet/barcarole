@@ -46,6 +46,7 @@ class MediaStoreLibrarySource @Inject constructor(
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.DATA,
             MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.GENRE,
         )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} >= ?"
@@ -65,6 +66,7 @@ class MediaStoreLibrarySource @Inject constructor(
             val dateAddedCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val dataCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
             val sizeCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val genreCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
 
             while (cursor.moveToNext()) {
                 val path = cursor.getString(dataCol) ?: continue
@@ -82,6 +84,7 @@ class MediaStoreLibrarySource @Inject constructor(
                     dateAddedSeconds = cursor.getLong(dateAddedCol),
                     path = path,
                     sizeBytes = cursor.getLong(sizeCol),
+                    genre = cursor.getString(genreCol) ?: "",
                 )
             }
         }

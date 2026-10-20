@@ -11,6 +11,7 @@ object LibraryIndex {
         albums = albumsOf(songs),
         artists = artistsOf(songs),
         folders = foldersOf(songs),
+        genres = genresOf(songs),
     )
 
     fun albumsOf(songs: List<Song>): List<Album> = songs
@@ -45,6 +46,12 @@ object LibraryIndex {
         .map { (path, tracks) -> Folder(path = path, songCount = tracks.size) }
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
 
+    fun genresOf(songs: List<Song>): List<Genre> = songs
+        .filter { it.genre.isNotBlank() }
+        .groupBy { it.genre }
+        .map { (genre, tracks) -> Genre(name = genre, songCount = tracks.size) }
+        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
+
     fun sortSongs(songs: List<Song>, order: SortOrder): List<Song> {
         val comparator: Comparator<Song> = when (order.key) {
             SongSort.TITLE -> compareBy(String.CASE_INSENSITIVE_ORDER) { it.title }
@@ -72,6 +79,10 @@ object LibraryIndex {
 
     fun tracksOfFolder(songs: List<Song>, folderPath: String): List<Song> = songs
         .filter { it.folderPath == folderPath }
+        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+
+    fun tracksOfGenre(songs: List<Song>, genreName: String): List<Song> = songs
+        .filter { it.genre.equals(genreName, ignoreCase = true) }
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
 
     fun search(library: Library, rawQuery: String): SearchResults {

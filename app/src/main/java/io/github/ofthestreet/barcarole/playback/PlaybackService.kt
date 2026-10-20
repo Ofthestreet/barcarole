@@ -240,6 +240,12 @@ class PlaybackService : MediaLibraryService() {
                     BrowseTree.queueFor(context, single.mediaId)
                 }
                 if (selection != null) {
+                    // Enable shuffle mode for shuffle entries
+                    val isShuffle = single.mediaId == BrowseIds.SHUFFLE_SONGS ||
+                            single.mediaId == BrowseIds.SHUFFLE_GENRES
+                    if (isShuffle) {
+                        mediaSession.player?.shuffleModeEnabled = true
+                    }
                     return Futures.immediateFuture(
                         MediaSession.MediaItemsWithStartPosition(
                             selection.songs.toMediaItems(),

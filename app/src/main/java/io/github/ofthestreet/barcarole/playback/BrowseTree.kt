@@ -40,14 +40,19 @@ object BrowseIds {
     const val TAB_FAVOURITES = "tab|favourites"
     const val TAB_SONGS = "tab|songs"
     const val TAB_ALBUMS = "tab|albums"
-    const val TAB_ARTISTS = "tab|artists"
+    const val TAB_GENRES = "tab|genres"
     const val TAB_FOLDERS = "tab|folders"
+
+    // Shuffle entries for Android Auto
+    const val SHUFFLE_SONGS = "shuffle|songs"
+    const val SHUFFLE_GENRES = "shuffle|genres"
 
     private const val SEP = '|'
 
     fun album(id: Long) = "album|$id"
     fun artist(id: Long) = "artist|$id"
     fun folder(path: String) = "folder|$path"
+    fun genre(name: String) = "genre|$name"
 
     fun song(songId: Long, parentId: String) = "song|$songId|$parentId"
 
@@ -75,7 +80,7 @@ object BrowseTree {
         add(BrowseNode(BrowseIds.TAB_FAVOURITES, "Favourites"))
         add(BrowseNode(BrowseIds.TAB_SONGS, "Songs"))
         if (context.showAlbums) add(BrowseNode(BrowseIds.TAB_ALBUMS, "Albums"))
-        add(BrowseNode(BrowseIds.TAB_ARTISTS, "Artists"))
+        add(BrowseNode(BrowseIds.TAB_GENRES, "Genres"))
         add(BrowseNode(BrowseIds.TAB_FOLDERS, "Folders"))
     }
 
@@ -87,8 +92,17 @@ object BrowseTree {
         parentId == BrowseIds.TAB_FAVOURITES ->
             context.favourites.map { it.toNode(parentId) }
 
-        parentId == BrowseIds.TAB_SONGS ->
-            library.songs.map { it.toNode(parentId) }
+        parentId == BrowseIds.TAB_SONGS -> {
+            val items = library.songs.map { it.toNode(parentId) }.toMutableList()
+            // Add shuffle entry for Songs tab
+            items.add(0, BrowseNode(
+                id = BrowseIds.SHUFFLE_SONGS,
+                title = "Shuffle All Songs",
+                subtitle = "${library.songs.size} tracks",
+                playable = true,
+            ))
+            items
+        }
 
         parentId == BrowseIds.TAB_ALBUMS -> library.albums.map { album ->
             BrowseNode(
@@ -99,12 +113,22 @@ object BrowseTree {
             )
         }
 
-        parentId == BrowseIds.TAB_ARTISTS -> library.artists.map { artist ->
-            BrowseNode(
-                id = BrowseIds.artist(artist.id),
-                title = artist.name,
-                subtitle = "${artist.albumCount} albums",
-            )
+        parentId == BrowseIds.TAB_GENRES -> {
+            val items = library.genres.map { genre ->
+                BrowseNode(
+                    id = BrowseIds.genre(genre.name),
+                    title = genre.name,
+                    subtitle = "${genre.songCount} tracks",
+                )
+            }.toMutableList()
+            // Add shuffle entry for Genres tab
+            items.add(0, BrowseNode(
+                id = BrowseIds.SHUFFLE_GENRES,
+                title = "Shuffle All Genres",
+                subtitle = "${library.genres.size} genres",
+                playable = true,
+            ))
+            items
         }
 
         parentId == BrowseIds.TAB_FOLDERS -> library.folders.map { folder ->
@@ -125,6 +149,8 @@ object BrowseTree {
         return when {
         parentId == BrowseIds.TAB_FAVOURITES -> context.favourites
         parentId == BrowseIds.TAB_SONGS -> library.songs
+        parentId == BrowseIds.SHUFFLE_SONGS -> library.songs
+        parentId == BrowseIds.SHUFFLE_GENRES -> library.songs
         parentId == BrowseIds.ROOT -> emptyList()
 
         BrowseIds.payloadOf("album", parentId) != null ->
@@ -135,6 +161,9 @@ object BrowseTree {
 
         BrowseIds.payloadOf("folder", parentId) != null ->
             LibraryIndex.tracksOfFolder(library.songs, BrowseIds.payloadOf("folder", parentId)!!)
+
+        BrowseIds.payloadOf("genre", parentId) != null ->
+            LibraryIndex.tracksOfGenre(library.songs, BrowseIds.payloadOf("genre", parentId)!!)
 
         else -> emptyList()
         }
