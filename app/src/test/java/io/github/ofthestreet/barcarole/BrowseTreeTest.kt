@@ -42,7 +42,7 @@ class BrowseTreeTest {
                 BrowseIds.TAB_FAVOURITES,
                 BrowseIds.TAB_SONGS,
                 BrowseIds.TAB_ALBUMS,
-                BrowseIds.TAB_ARTISTS,
+                BrowseIds.TAB_GENRES,
                 BrowseIds.TAB_FOLDERS,
             ),
             ids,
@@ -54,7 +54,7 @@ class BrowseTreeTest {
         val withoutAlbums = library.copy(showAlbums = false)
         val ids = BrowseTree.childrenOf(withoutAlbums, BrowseIds.ROOT).map { it.id }
         assertEquals(
-            listOf(BrowseIds.TAB_FAVOURITES, BrowseIds.TAB_SONGS, BrowseIds.TAB_ARTISTS, BrowseIds.TAB_FOLDERS),
+            listOf(BrowseIds.TAB_FAVOURITES, BrowseIds.TAB_SONGS, BrowseIds.TAB_GENRES, BrowseIds.TAB_FOLDERS),
             ids,
         )
         assertTrue(BrowseTree.search(withoutAlbums, "album b").none { it.id == BrowseIds.album(2) })
